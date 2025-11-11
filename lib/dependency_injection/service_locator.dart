@@ -13,14 +13,23 @@ import '../database/daos/test_plans_dao.dart';
 // --- FEATURES ---
 import '../features/module_list/data/repository/module_repository_impl.dart';
 import '../features/module_list/domain/repository/module_repository.dart';
+import '../features/module_list/domain/usecases/create_module.dart';
+import '../features/module_list/domain/usecases/create_test_plan.dart';
+import '../features/module_list/domain/usecases/delete_module.dart';
+import '../features/module_list/domain/usecases/delete_test_plan.dart';
 import '../features/module_list/domain/usecases/get_modules_for_project.dart';
 import '../features/module_list/domain/usecases/get_submodules_for_module.dart';
 import '../features/module_list/domain/usecases/get_test_plan_for_modules.dart';
+import '../features/module_list/domain/usecases/update_module.dart';
+import '../features/module_list/domain/usecases/update_test_plan.dart';
 import '../features/module_list/presentation/bloc/module_bloc.dart';
 
 import '../features/project_list/data/repository/project_repository_impl.dart';
 import '../features/project_list/domain/repository/project_repository.dart';
+import '../features/project_list/domain/usecases/create_new_project.dart';
+import '../features/project_list/domain/usecases/delete_project.dart';
 import '../features/project_list/domain/usecases/get_all_projects.dart';
+import '../features/project_list/domain/usecases/update_project.dart';
 import '../features/project_list/presentation/bloc/project_bloc.dart';
 
 import '../features/test_case_list/data/repository/test_case_repository_impl.dart';
@@ -55,7 +64,10 @@ Future<void> init() async {
         () => ProjectRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => GetAllProjects(sl()));
-  sl.registerFactory(() => ProjectBloc(sl()));
+  sl.registerLazySingleton(() => CreateProject(sl()));
+  sl.registerLazySingleton(() => UpdateProject(sl()));
+  sl.registerLazySingleton(() => DeleteProject(sl()));
+  sl.registerFactory(() => ProjectBloc(sl(), sl(), sl(), sl()));
 
   // ------------------------------
   // 📦 MODULES
@@ -67,16 +79,26 @@ Future<void> init() async {
   sl.registerLazySingleton(() => GetModulesForProject(sl()));
   sl.registerLazySingleton(() => GetSubmodulesForModule(sl()));
   sl.registerLazySingleton(() => GetTestPlansForModule(sl()));
+  sl.registerLazySingleton(() => CreateModule(sl()));
+  sl.registerLazySingleton(() => UpdateModule(sl()));
+  sl.registerLazySingleton(() => DeleteModule(sl()));
+  sl.registerLazySingleton(() => CreateTestPlan(sl()));
+  sl.registerLazySingleton(() => UpdateTestPlan(sl()));
+  sl.registerLazySingleton(() => DeleteTestPlan(sl()));
 
-  sl.registerFactory(
-        () => ModuleBloc(
-      getModulesForProject: sl(),
-      getSubmodulesForModule: sl(),
-      getTestPlansForModule: sl(),
-          saveVisitedModules: sl(),
-          getVisitedModules: sl(),
-    ),
-  );
+  sl.registerFactory(() => ModuleBloc(
+    getModulesForProject: sl(),
+    getSubmodulesForModule: sl(),
+    getTestPlansForModule: sl(),
+    saveVisitedModules: sl(),
+    getVisitedModules: sl(),
+    createModule: sl(),
+    updateModule: sl(),
+    deleteModule: sl(),
+    createTestPlan: sl(),
+    updateTestPlan: sl(),
+    deleteTestPlan: sl(),
+  ));
 
   // ------------------------------
   // 🧪 TEST PLANS

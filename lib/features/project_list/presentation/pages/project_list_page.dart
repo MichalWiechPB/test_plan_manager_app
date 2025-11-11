@@ -4,6 +4,7 @@ import '../bloc/project_bloc.dart';
 import '../bloc/project_event.dart';
 import '../bloc/project_state.dart';
 import '../widgets/project_tile.dart';
+import '../widgets/create_project_form.dart';
 
 class ProjectListPage extends StatefulWidget {
   const ProjectListPage({super.key});
@@ -21,6 +22,23 @@ class _ProjectListPageState extends State<ProjectListPage> {
 
   void _dispatchLoadProjects() {
     BlocProvider.of<ProjectBloc>(context).add(GetAllProjectsEvent());
+  }
+
+  Future<void> _openCreateProjectForm() async {
+    final result = await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (modalContext) {
+        return BlocProvider.value(
+          value: context.read<ProjectBloc>(),
+          child: const CreateProjectForm(),
+        );
+      },
+    );
+
+    if (result == true && mounted) {
+      _dispatchLoadProjects();
+    }
   }
 
   @override
@@ -53,6 +71,10 @@ class _ProjectListPageState extends State<ProjectListPage> {
             ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _openCreateProjectForm,
+        child: const Icon(Icons.add),
       ),
     );
   }

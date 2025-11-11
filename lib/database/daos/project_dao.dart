@@ -10,12 +10,15 @@ class ProjectDao extends DatabaseAccessor<AppDatabase> with _$ProjectDaoMixin {
   ProjectDao(this.db) : super(db);
 
   Future<List<Project>> getAllProjects() => select(db.projects).get();
+  Future<void> insertProject(ProjectsCompanion project) async {
+    await into(db.projects).insert(project);
+  }
+  Future<void> updateProject(ProjectsCompanion project) async {
+    await update(db.projects).replace(project);
+  }
 
-  Future<void> insertProject(ProjectsCompanion project) =>
-      into(db.projects).insert(project);
+  Future<void> deleteProject(String id) async {
+    await (delete(db.projects)..where((tbl) => tbl.id.equals(id))).go();
+  }
 
-  Future<void> deleteProject(String id) =>
-      (delete(db.projects)..where((tbl) => tbl.id.equals(id))).go();
-
-  Stream<List<Project>> watchAllProjects() => select(db.projects).watch();
 }

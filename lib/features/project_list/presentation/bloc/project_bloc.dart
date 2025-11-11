@@ -1,19 +1,32 @@
 import 'package:bloc/bloc.dart';
 import 'package:dartz/dartz.dart';
-import 'package:flutter/foundation.dart';
 
 import '../../../../core/error/failures.dart';
 import '../../../../core/usecases/usecase.dart';
 import '../../domain/entities/project.dart';
+import '../../domain/usecases/create_new_project.dart';
 import '../../domain/usecases/get_all_projects.dart';
+import '../../domain/usecases/update_project.dart';
+import '../../domain/usecases/delete_project.dart';
 import 'project_event.dart';
 import 'project_state.dart';
 
 class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
   final GetAllProjects getAllProjects;
+  final CreateProject createProject;
+  final UpdateProject updateProject;
+  final DeleteProject deleteProject;
 
-  ProjectBloc(this.getAllProjects) : super(const ProjectState.initial()) {
+  ProjectBloc(
+      this.getAllProjects,
+      this.createProject,
+      this.updateProject,
+      this.deleteProject,
+      ) : super(const ProjectState.initial()) {
     on<GetAllProjectsEvent>(_onGetAllProjects);
+    on<CreateProjectEvent>(_onCreateProject);
+    on<UpdateProjectEvent>(_onUpdateProject);
+    on<DeleteProjectEvent>(_onDeleteProject);
   }
 
   Future<void> _onGetAllProjects(
@@ -21,9 +34,8 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
       Emitter<ProjectState> emit,
       ) async {
     emit(state.copyWith(status: ProjectStatus.loading));
-
-    final Either<Failure, List<ProjectEntity>> result = await getAllProjects(NoParams());
-
+    final Either<Failure, List<ProjectEntity>> result =
+    await getAllProjects(NoParams());
     result.fold(
           (failure) => emit(state.copyWith(
         status: ProjectStatus.failure,
@@ -33,6 +45,51 @@ class ProjectBloc extends Bloc<ProjectEvent, ProjectState> {
         status: ProjectStatus.success,
         projects: projects,
       )),
+    );
+  }
+
+  Future<void> _onCreateProject(
+      CreateProjectEvent event,
+      Emitter<ProjectState> emit,
+      ) async {
+    emit(state.copyWith(status: ProjectStatus.loading));
+    final result = await createProject(CreateProjectParams(event.project));
+    result.fold(
+          (failure) => emit(state.copyWith(
+        status: ProjectStatus.failure,
+        errorMessage: failure.message ?? 'Błąd tworzenia projektu',
+      )),
+          (_) => add(GetAllProjectsEvent()),
+    );
+  }
+
+  Future<void> _onUpdateProject(
+      UpdateProjectEvent event,
+      Emitter<ProjectState> emit,
+      ) async {
+    emit(state.copyWith(status: ProjectStatus.loading));
+    final result = await updateProject(UpdateProjectParams(event.project));
+    result.fold(
+          (failure) => emit(state.copyWith(
+        status: ProjectStatus.failure,
+        errorMessage: failure.message ?? 'Błąd aktualizacji projektu',
+      )),
+          (_) => add(GetAllProjectsEvent()),
+    );
+  }
+
+  Future<void> _onDeleteProject(
+      DeleteProjectEvent event,
+      Emitter<ProjectState> emit,
+      ) async {
+    emit(state.copyWith(status: ProjectStatus.loading));
+    final result = await deleteProject(DeleteProjectParams(event.id));
+    result.fold(
+          (failure) => emit(state.copyWith(
+        status: ProjectStatus.failure,
+        errorMessage: failure.message ?? 'Błąd usuwania projektu',
+      )),
+          (_) => add(GetAllProjectsEvent()),
     );
   }
 }

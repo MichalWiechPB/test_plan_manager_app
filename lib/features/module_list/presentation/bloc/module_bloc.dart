@@ -4,9 +4,15 @@ import '../../../../core/global/navigation/domain/usecases/save_visited_modules.
 import '../../../../dependency_injection/service_locator.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
+import '../../domain/usecases/create_module.dart';
+import '../../domain/usecases/create_test_plan.dart';
+import '../../domain/usecases/delete_module.dart';
+import '../../domain/usecases/delete_test_plan.dart';
 import '../../domain/usecases/get_modules_for_project.dart';
 import '../../domain/usecases/get_submodules_for_module.dart';
 import '../../domain/usecases/get_test_plan_for_modules.dart';
+import '../../domain/usecases/update_module.dart';
+import '../../domain/usecases/update_test_plan.dart';
 import 'module_event.dart';
 import 'module_state.dart';
 
@@ -16,6 +22,12 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
   final GetTestPlansForModule getTestPlansForModule;
   final SaveVisitedModules saveVisitedModules;
   final GetVisitedModules getVisitedModules;
+  final CreateModule createModule;
+  final UpdateModule updateModule;
+  final DeleteModule deleteModule;
+  final CreateTestPlan createTestPlan;
+  final UpdateTestPlan updateTestPlan;
+  final DeleteTestPlan deleteTestPlan;
 
   ModuleBloc({
     required this.getModulesForProject,
@@ -23,12 +35,25 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     required this.getTestPlansForModule,
     required this.saveVisitedModules,
     required this.getVisitedModules,
+    required this.createModule,
+    required this.updateModule,
+    required this.deleteModule,
+    required this.createTestPlan,
+    required this.updateTestPlan,
+    required this.deleteTestPlan,
   }) : super(const ModuleState.initial()) {
     on<GetModulesForProjectEvent>(_onGetModulesForProject);
     on<GetSubmodulesForModuleEvent>(_onGetSubmodulesForModule);
     on<LoadPreviewForModuleEvent>(_onLoadPreviewForModule);
     on<NavigateBackEvent>(_onNavigateBack);
     on<SetVisitedPathEvent>(_onSetVisitedPath);
+
+    on<CreateModuleEvent>(_onCreateModule);
+    on<UpdateModuleEvent>(_onUpdateModule);
+    on<DeleteModuleEvent>(_onDeleteModule);
+    on<CreateTestPlanEvent>(_onCreateTestPlan);
+    on<UpdateTestPlanEvent>(_onUpdateTestPlan);
+    on<DeleteTestPlanEvent>(_onDeleteTestPlan);
   }
 
   // ---------------------------------------------------------------------------
@@ -194,4 +219,66 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     // odśwież UI stanem
     emit(state.copyWith(visitedModules: List<String>.from(event.visited)));
   }
+  Future<void> _refreshAfterChange(Emitter<ModuleState> emit, {String? moduleId}) async {
+    final projectId = state.currentProjectId;
+    if (projectId == null) return;
+    if (moduleId == null) {
+      add(GetModulesForProjectEvent(projectId));
+    } else {
+      add(GetSubmodulesForModuleEvent(moduleId));
+    }
+  }
+
+// Modules
+  Future<void> _onCreateModule(CreateModuleEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await createModule(CreateModuleParams(e.module));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: e.module.parentModuleId),
+    );
+  }
+  Future<void> _onUpdateModule(UpdateModuleEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await updateModule(UpdateModuleParams(e.module));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: e.module.parentModuleId),
+    );
+  }
+  Future<void> _onDeleteModule(DeleteModuleEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await deleteModule(DeleteModuleParams(e.moduleId));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: e.moduleId), // odśwież rodzica według twojej logiki
+    );
+  }
+
+// Test plans
+  Future<void> _onCreateTestPlan(CreateTestPlanEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await createTestPlan(CreateTestPlanParams(e.plan));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: e.plan.moduleId),
+    );
+  }
+  Future<void> _onUpdateTestPlan(UpdateTestPlanEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await updateTestPlan(UpdateTestPlanParams(e.plan));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: e.plan.moduleId),
+    );
+  }
+  Future<void> _onDeleteTestPlan(DeleteTestPlanEvent e, Emitter<ModuleState> emit) async {
+    emit(state.copyWith(status: ModuleStatus.loading));
+    final res = await deleteTestPlan(DeleteTestPlanParams(e.testPlanId));
+    res.fold(
+          (f) => emit(state.copyWith(status: ModuleStatus.failure, errorMessage: f.message)),
+          (_) => _refreshAfterChange(emit, moduleId: state.visitedModules.isNotEmpty ? state.visitedModules.last : null),
+    );
+  }
+
 }
