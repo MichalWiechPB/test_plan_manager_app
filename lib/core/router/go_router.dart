@@ -3,6 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../dependency_injection/service_locator.dart';
+import '../../features/comments/presentation/bloc/comment_bloc.dart';
+import '../../features/comments/presentation/bloc/comment_event.dart';
+import '../../features/comments/presentation/pages/comment_page.dart';
 import '../../features/module_list/presentation/bloc/module_bloc.dart';
 import '../../features/module_list/presentation/bloc/module_event.dart';
 import '../../features/module_list/presentation/pages/module_list_page.dart';
@@ -115,6 +118,18 @@ final GoRouter router = GoRouter(
           planId: extra['planId'] ?? '',
           moduleId: extra['moduleId'] ?? '',
           projectId: extra['projectId'] ?? '',
+        );
+      },
+    ),
+    GoRoute(
+      path: '/cases/:caseId/comments',
+      name: 'comments',
+      builder: (context, state) {
+        final caseId = state.pathParameters['caseId']!;
+        return BlocProvider(
+          create: (_) => sl<CommentBloc>()
+            ..add(GetCommentsForCaseEvent(caseId)),
+          child: CommentPage(testCaseId: caseId),
         );
       },
     ),

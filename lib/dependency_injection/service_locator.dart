@@ -5,6 +5,7 @@ import '../core/global/navigation/domain/usecases/get_visited_modules.dart';
 import '../core/global/navigation/domain/usecases/save_visited_modules.dart';
 
 // 🧩 DATABASE
+import '../database/daos/comments_dao.dart';
 import '../database/data.dart';
 import '../database/daos/module_dao.dart';
 import '../database/daos/project_dao.dart';
@@ -13,6 +14,12 @@ import '../database/daos/test_plans_dao.dart';
 import '../database/daos/test_steps_dao.dart';
 
 // 📁 PROJECTS
+import '../features/comments/data/repository/comment_repository_impl.dart';
+import '../features/comments/domain/repository/comment_repository.dart';
+import '../features/comments/domain/usecases/add_comment.dart';
+import '../features/comments/domain/usecases/delete_comment.dart';
+import '../features/comments/domain/usecases/get_comments_for_case.dart';
+import '../features/comments/presentation/bloc/comment_bloc.dart';
 import '../features/project_list/data/repository/project_repository_impl.dart';
 import '../features/project_list/domain/repository/project_repository.dart';
 import '../features/project_list/domain/usecases/create_new_project.dart';
@@ -36,6 +43,10 @@ import '../features/module_list/domain/usecases/delete_test_plan.dart';
 import '../features/module_list/presentation/bloc/module_bloc.dart';
 
 // 🧪 TEST PLANS
+import '../features/test_case_list/domain/usecases/create_test_step.dart';
+import '../features/test_case_list/domain/usecases/delete_test_step.dart';
+import '../features/test_case_list/domain/usecases/update_test_step.dart';
+import '../features/test_case_list/domain/usecases/update_test_step_order.dart';
 import '../features/test_plan_list/data/repositories/test_plan_repository_impl.dart';
 import '../features/test_plan_list/domain/repositories/test_plan_repository.dart';
 import '../features/test_plan_list/domain/usecases/get_test_cases_for_plan.dart';
@@ -96,6 +107,18 @@ Future<void> init() async {
     updateTestPlan: sl(),
     deleteTestPlan: sl(),
   ));
+  //COMMENTS
+  sl.registerLazySingleton(() => CommentsDao(sl()));
+  sl.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl(sl()));
+  sl.registerLazySingleton(() => GetCommentsForCase(sl()));
+  sl.registerLazySingleton(() => AddComment(sl()));
+  sl.registerLazySingleton(() => DeleteComment(sl()));
+  sl.registerFactory(() => CommentBloc(
+    getCommentsForCase: sl(),
+    addComment: sl(),
+    deleteComment: sl(),
+  ));
+
 
   // 🧪 Test Plans
   sl.registerLazySingleton<TestPlanRepository>(
@@ -113,9 +136,17 @@ Future<void> init() async {
 
   // ✅ Test Cases / Steps
   sl.registerLazySingleton(() => GetTestStepsForCase(sl()));
-  sl.registerLazySingleton<TestStepRepository>(
+  sl.registerLazySingleton(() => CreateTestStep(sl()));
+  sl.registerLazySingleton(() => UpdateTestStep(sl()));
+  sl.registerLazySingleton(() => DeleteTestStep(sl()));
+  sl.registerLazySingleton(() => UpdateTestStepOrder(sl()));
+  sl.registerLazySingleton<TestCaseRepository>(
           () => TestStepRepositoryImpl(sl()));
-  sl.registerFactory(() => TestStepBloc(getTestStepsForCase: sl()));
+  sl.registerFactory(() => TestStepBloc(getTestStepsForCase: sl(),
+    createTestStep: sl(),
+    updateTestStep: sl(),
+    deleteTestStep: sl(),
+    updateTestStepOrder: sl(),));
 
   // 🌍 Global Navigation
   sl.registerLazySingleton<NavigationRepository>(

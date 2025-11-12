@@ -6,7 +6,7 @@ class TestStepEntity extends Equatable {
   final int stepNumber;
   final String description;
   final String? expected;
-  final String status; // 'NotRun' | 'Passed' | 'Failed' | 'Blocked' ...
+  final String status;
 
   const TestStepEntity({
     required this.id,
@@ -16,6 +16,24 @@ class TestStepEntity extends Equatable {
     this.expected,
     required this.status,
   });
+
+  TestStepEntity copyWith({
+    String? id,
+    String? testCaseId,
+    int? stepNumber,
+    String? description,
+    String? expected,
+    String? status,
+  }) {
+    return TestStepEntity(
+      id: id ?? this.id,
+      testCaseId: testCaseId ?? this.testCaseId,
+      stepNumber: stepNumber ?? this.stepNumber,
+      description: description ?? this.description,
+      expected: expected ?? this.expected,
+      status: status ?? this.status,
+    );
+  }
 
   @override
   List<Object?> get props => [id, testCaseId, stepNumber, description, expected, status];

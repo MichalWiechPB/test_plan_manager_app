@@ -19,15 +19,26 @@ class TestStepsDao extends DatabaseAccessor<AppDatabase> with _$TestStepsDaoMixi
   Future<void> insertStep(TestStepsCompanion step) =>
       into(db.testSteps).insert(step);
 
+  Future<void> updateStep(TestStepsCompanion step) =>
+      update(db.testSteps).replace(step);
+
   Future<void> updateStepStatus(String stepId, String newStatus) async {
     await (update(db.testSteps)
       ..where((t) => t.id.equals(stepId)))
         .write(TestStepsCompanion(status: Value(newStatus)));
   }
 
+  Future<void> deleteStep(String id) async {
+    await (delete(db.testSteps)..where((t) => t.id.equals(id))).go();
+  }
+
   Future<void> deleteStepsForCase(String testCaseId) async {
-    await (delete(db.testSteps)
-      ..where((t) => t.testCaseId.equals(testCaseId)))
+    await (delete(db.testSteps)..where((t) => t.testCaseId.equals(testCaseId)))
         .go();
   }
+  Future<void> updateStepOrder(String stepId, int newStepNumber) async {
+    await (update(db.testSteps)..where((tbl) => tbl.id.equals(stepId)))
+        .write(TestStepsCompanion(stepNumber: Value(newStepNumber)));
+  }
+
 }
