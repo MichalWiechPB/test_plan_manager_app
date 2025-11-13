@@ -61,7 +61,7 @@ class TestPlanListPage extends StatelessWidget {
             if (testCases.isEmpty) {
               return const Center(child: Text('Brak przypadków testowych'));
             }
-            
+
             final total = testCases.length;
             final passed = testCases.where((c) => c.status == 'Passed').length;
             final failed = testCases.where((c) => c.status == 'Failed').length;

@@ -1,10 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/entities/test_step.dart';
+import '../../../../core/usecases/impl/recalculate_testcase_progress.dart';
 import '../../domain/usecases/get_teststeps_for_case.dart';
 import '../../domain/usecases/create_test_step.dart';
 import '../../domain/usecases/update_test_step.dart';
 import '../../domain/usecases/delete_test_step.dart';
 import '../../domain/usecases/update_test_step_order.dart';
+
 import 'test_case_event.dart';
 import 'test_case_state.dart';
 
@@ -14,6 +15,7 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
   final UpdateTestStep updateTestStep;
   final DeleteTestStep deleteTestStep;
   final UpdateTestStepOrder updateTestStepOrder;
+  final RecalculateTestCaseProgress recalcProgress;
 
   TestStepBloc({
     required this.getTestStepsForCase,
@@ -21,19 +23,21 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     required this.updateTestStep,
     required this.deleteTestStep,
     required this.updateTestStepOrder,
+    required this.recalcProgress,
   }) : super(const TestStepState.initial()) {
-    on<GetTestStepsForCaseEvent>(_onGetTestStepsForCase);
-    on<CreateTestStepEvent>(_onCreateTestStep);
-    on<UpdateTestStepEvent>(_onUpdateTestStep);
-    on<DeleteTestStepEvent>(_onDeleteTestStep);
-    on<ReorderTestStepsEvent>(_onReorderTestSteps);
+    on<GetTestStepsForCaseEvent>(_onGet);
+    on<CreateTestStepEvent>(_onCreate);
+    on<UpdateTestStepEvent>(_onUpdate);
+    on<DeleteTestStepEvent>(_onDelete);
+    on<ReorderTestStepsEvent>(_onReorder);
   }
 
-  Future<void> _onGetTestStepsForCase(
+  Future<void> _onGet(
       GetTestStepsForCaseEvent event,
       Emitter<TestStepState> emit,
       ) async {
     emit(state.copyWith(status: TestStepStatus.loading));
+
     final result = await getTestStepsForCase(event.testCaseId);
     result.fold(
           (failure) => emit(state.copyWith(
@@ -47,76 +51,80 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     );
   }
 
-  Future<void> _onCreateTestStep(
+  Future<void> _onCreate(
       CreateTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
     final result = await createTestStep(event.step);
-    result.fold(
-          (failure) => emit(state.copyWith(errorMessage: failure.message)),
-          (_) {
-        final updatedSteps = List<TestStepEntity>.from(state.steps)
-          ..add(event.step)
-          ..sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
-        emit(state.copyWith(steps: updatedSteps, status: TestStepStatus.success));
+
+    await result.fold(
+          (failure) async => emit(state.copyWith(errorMessage: failure.message)),
+          (_) async {
+        final updated = [...state.steps, event.step]..sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
+        emit(state.copyWith(steps: updated));
+
+        await recalcProgress(event.step.testCaseId);
       },
     );
   }
 
-  Future<void> _onUpdateTestStep(
+  Future<void> _onUpdate(
       UpdateTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
     final result = await updateTestStep(event.step);
-    result.fold(
-          (failure) => emit(state.copyWith(errorMessage: failure.message)),
-          (_) {
-        final updatedSteps = state.steps.map((s) {
-          return s.id == event.step.id ? event.step : s;
-        }).toList();
-        emit(state.copyWith(steps: updatedSteps, status: TestStepStatus.success));
+
+    await result.fold(
+          (failure) async => emit(state.copyWith(errorMessage: failure.message)),
+          (_) async {
+        final updated = [
+          for (final s in state.steps) if (s.id == event.step.id) event.step else s
+        ];
+        emit(state.copyWith(steps: updated));
+
+        await recalcProgress(event.step.testCaseId);
       },
     );
   }
 
-  Future<void> _onDeleteTestStep(
+  Future<void> _onDelete(
       DeleteTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
     final result = await deleteTestStep(event.stepId);
-    result.fold(
-          (failure) => emit(state.copyWith(errorMessage: failure.message)),
-          (_) {
-        final updated = state.steps
-            .where((s) => s.id != event.stepId)
-            .toList();
+
+    await result.fold(
+          (failure) async => emit(state.copyWith(errorMessage: failure.message)),
+          (_) async {
+        final newSteps = state.steps.where((s) => s.id != event.stepId).toList();
 
         final renumbered = [
-          for (int i = 0; i < updated.length; i++)
-            updated[i].copyWith(stepNumber: i + 1)
+          for (int i = 0; i < newSteps.length; i++)
+            newSteps[i].copyWith(stepNumber: i + 1)
         ];
 
-        emit(state.copyWith(steps: renumbered, status: TestStepStatus.success));
+        emit(state.copyWith(steps: renumbered));
+        await updateTestStepOrder(renumbered);
 
-        // aktualizacja w bazie
-        updateTestStepOrder(renumbered);
+        if (renumbered.isNotEmpty) {
+          await recalcProgress(renumbered.first.testCaseId);
+        }
       },
     );
   }
 
-  Future<void> _onReorderTestSteps(
+  Future<void> _onReorder(
       ReorderTestStepsEvent event,
       Emitter<TestStepState> emit,
       ) async {
-    // 🔹 zapis nowej kolejności
     final result = await updateTestStepOrder(event.reorderedSteps);
 
-    result.fold(
-          (failure) => emit(state.copyWith(errorMessage: failure.message)),
-          (_) => emit(state.copyWith(
-        steps: event.reorderedSteps,
-        status: TestStepStatus.success,
-      )),
+    await result.fold(
+          (failure) async => emit(state.copyWith(errorMessage: failure.message)),
+          (_) async {
+        emit(state.copyWith(steps: event.reorderedSteps));
+        await recalcProgress(event.reorderedSteps.first.testCaseId);
+      },
     );
   }
 }

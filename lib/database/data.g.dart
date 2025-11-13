@@ -2064,6 +2064,30 @@ class $TestCasesTable extends TestCases
       'REFERENCES test_cases (id)',
     ),
   );
+  static const VerificationMeta _totalStepsMeta = const VerificationMeta(
+    'totalSteps',
+  );
+  @override
+  late final GeneratedColumn<int> totalSteps = GeneratedColumn<int>(
+    'total_steps',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _passedStepsMeta = const VerificationMeta(
+    'passedSteps',
+  );
+  @override
+  late final GeneratedColumn<int> passedSteps = GeneratedColumn<int>(
+    'passed_steps',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2074,6 +2098,8 @@ class $TestCasesTable extends TestCases
     expectedResult,
     lastModifiedUtc,
     parentCaseId,
+    totalSteps,
+    passedSteps,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2152,6 +2178,21 @@ class $TestCasesTable extends TestCases
         ),
       );
     }
+    if (data.containsKey('total_steps')) {
+      context.handle(
+        _totalStepsMeta,
+        totalSteps.isAcceptableOrUnknown(data['total_steps']!, _totalStepsMeta),
+      );
+    }
+    if (data.containsKey('passed_steps')) {
+      context.handle(
+        _passedStepsMeta,
+        passedSteps.isAcceptableOrUnknown(
+          data['passed_steps']!,
+          _passedStepsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -2197,6 +2238,16 @@ class $TestCasesTable extends TestCases
         DriftSqlType.string,
         data['${effectivePrefix}parent_case_id'],
       ),
+      totalSteps:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}total_steps'],
+          )!,
+      passedSteps:
+          attachedDatabase.typeMapping.read(
+            DriftSqlType.int,
+            data['${effectivePrefix}passed_steps'],
+          )!,
     );
   }
 
@@ -2215,6 +2266,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
   final String? expectedResult;
   final DateTime? lastModifiedUtc;
   final String? parentCaseId;
+  final int totalSteps;
+  final int passedSteps;
   const TestCase({
     required this.id,
     required this.planId,
@@ -2224,6 +2277,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
     this.expectedResult,
     this.lastModifiedUtc,
     this.parentCaseId,
+    required this.totalSteps,
+    required this.passedSteps,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2244,6 +2299,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
     if (!nullToAbsent || parentCaseId != null) {
       map['parent_case_id'] = Variable<String>(parentCaseId);
     }
+    map['total_steps'] = Variable<int>(totalSteps);
+    map['passed_steps'] = Variable<int>(passedSteps);
     return map;
   }
 
@@ -2269,6 +2326,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
           parentCaseId == null && nullToAbsent
               ? const Value.absent()
               : Value(parentCaseId),
+      totalSteps: Value(totalSteps),
+      passedSteps: Value(passedSteps),
     );
   }
 
@@ -2286,6 +2345,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
       expectedResult: serializer.fromJson<String?>(json['expectedResult']),
       lastModifiedUtc: serializer.fromJson<DateTime?>(json['lastModifiedUtc']),
       parentCaseId: serializer.fromJson<String?>(json['parentCaseId']),
+      totalSteps: serializer.fromJson<int>(json['totalSteps']),
+      passedSteps: serializer.fromJson<int>(json['passedSteps']),
     );
   }
   @override
@@ -2300,6 +2361,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
       'expectedResult': serializer.toJson<String?>(expectedResult),
       'lastModifiedUtc': serializer.toJson<DateTime?>(lastModifiedUtc),
       'parentCaseId': serializer.toJson<String?>(parentCaseId),
+      'totalSteps': serializer.toJson<int>(totalSteps),
+      'passedSteps': serializer.toJson<int>(passedSteps),
     };
   }
 
@@ -2312,6 +2375,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
     Value<String?> expectedResult = const Value.absent(),
     Value<DateTime?> lastModifiedUtc = const Value.absent(),
     Value<String?> parentCaseId = const Value.absent(),
+    int? totalSteps,
+    int? passedSteps,
   }) => TestCase(
     id: id ?? this.id,
     planId: planId ?? this.planId,
@@ -2326,6 +2391,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
     lastModifiedUtc:
         lastModifiedUtc.present ? lastModifiedUtc.value : this.lastModifiedUtc,
     parentCaseId: parentCaseId.present ? parentCaseId.value : this.parentCaseId,
+    totalSteps: totalSteps ?? this.totalSteps,
+    passedSteps: passedSteps ?? this.passedSteps,
   );
   TestCase copyWithCompanion(TestCasesCompanion data) {
     return TestCase(
@@ -2349,6 +2416,10 @@ class TestCase extends DataClass implements Insertable<TestCase> {
           data.parentCaseId.present
               ? data.parentCaseId.value
               : this.parentCaseId,
+      totalSteps:
+          data.totalSteps.present ? data.totalSteps.value : this.totalSteps,
+      passedSteps:
+          data.passedSteps.present ? data.passedSteps.value : this.passedSteps,
     );
   }
 
@@ -2362,7 +2433,9 @@ class TestCase extends DataClass implements Insertable<TestCase> {
           ..write('assignedToUserId: $assignedToUserId, ')
           ..write('expectedResult: $expectedResult, ')
           ..write('lastModifiedUtc: $lastModifiedUtc, ')
-          ..write('parentCaseId: $parentCaseId')
+          ..write('parentCaseId: $parentCaseId, ')
+          ..write('totalSteps: $totalSteps, ')
+          ..write('passedSteps: $passedSteps')
           ..write(')'))
         .toString();
   }
@@ -2377,6 +2450,8 @@ class TestCase extends DataClass implements Insertable<TestCase> {
     expectedResult,
     lastModifiedUtc,
     parentCaseId,
+    totalSteps,
+    passedSteps,
   );
   @override
   bool operator ==(Object other) =>
@@ -2389,7 +2464,9 @@ class TestCase extends DataClass implements Insertable<TestCase> {
           other.assignedToUserId == this.assignedToUserId &&
           other.expectedResult == this.expectedResult &&
           other.lastModifiedUtc == this.lastModifiedUtc &&
-          other.parentCaseId == this.parentCaseId);
+          other.parentCaseId == this.parentCaseId &&
+          other.totalSteps == this.totalSteps &&
+          other.passedSteps == this.passedSteps);
 }
 
 class TestCasesCompanion extends UpdateCompanion<TestCase> {
@@ -2401,6 +2478,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
   final Value<String?> expectedResult;
   final Value<DateTime?> lastModifiedUtc;
   final Value<String?> parentCaseId;
+  final Value<int> totalSteps;
+  final Value<int> passedSteps;
   final Value<int> rowid;
   const TestCasesCompanion({
     this.id = const Value.absent(),
@@ -2411,6 +2490,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
     this.expectedResult = const Value.absent(),
     this.lastModifiedUtc = const Value.absent(),
     this.parentCaseId = const Value.absent(),
+    this.totalSteps = const Value.absent(),
+    this.passedSteps = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   TestCasesCompanion.insert({
@@ -2422,6 +2503,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
     this.expectedResult = const Value.absent(),
     this.lastModifiedUtc = const Value.absent(),
     this.parentCaseId = const Value.absent(),
+    this.totalSteps = const Value.absent(),
+    this.passedSteps = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        planId = Value(planId),
@@ -2436,6 +2519,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
     Expression<String>? expectedResult,
     Expression<DateTime>? lastModifiedUtc,
     Expression<String>? parentCaseId,
+    Expression<int>? totalSteps,
+    Expression<int>? passedSteps,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2447,6 +2532,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
       if (expectedResult != null) 'expected_result': expectedResult,
       if (lastModifiedUtc != null) 'last_modified_utc': lastModifiedUtc,
       if (parentCaseId != null) 'parent_case_id': parentCaseId,
+      if (totalSteps != null) 'total_steps': totalSteps,
+      if (passedSteps != null) 'passed_steps': passedSteps,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2460,6 +2547,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
     Value<String?>? expectedResult,
     Value<DateTime?>? lastModifiedUtc,
     Value<String?>? parentCaseId,
+    Value<int>? totalSteps,
+    Value<int>? passedSteps,
     Value<int>? rowid,
   }) {
     return TestCasesCompanion(
@@ -2471,6 +2560,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
       expectedResult: expectedResult ?? this.expectedResult,
       lastModifiedUtc: lastModifiedUtc ?? this.lastModifiedUtc,
       parentCaseId: parentCaseId ?? this.parentCaseId,
+      totalSteps: totalSteps ?? this.totalSteps,
+      passedSteps: passedSteps ?? this.passedSteps,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2502,6 +2593,12 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
     if (parentCaseId.present) {
       map['parent_case_id'] = Variable<String>(parentCaseId.value);
     }
+    if (totalSteps.present) {
+      map['total_steps'] = Variable<int>(totalSteps.value);
+    }
+    if (passedSteps.present) {
+      map['passed_steps'] = Variable<int>(passedSteps.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2519,6 +2616,8 @@ class TestCasesCompanion extends UpdateCompanion<TestCase> {
           ..write('expectedResult: $expectedResult, ')
           ..write('lastModifiedUtc: $lastModifiedUtc, ')
           ..write('parentCaseId: $parentCaseId, ')
+          ..write('totalSteps: $totalSteps, ')
+          ..write('passedSteps: $passedSteps, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -5841,6 +5940,8 @@ typedef $$TestCasesTableCreateCompanionBuilder =
       Value<String?> expectedResult,
       Value<DateTime?> lastModifiedUtc,
       Value<String?> parentCaseId,
+      Value<int> totalSteps,
+      Value<int> passedSteps,
       Value<int> rowid,
     });
 typedef $$TestCasesTableUpdateCompanionBuilder =
@@ -5853,6 +5954,8 @@ typedef $$TestCasesTableUpdateCompanionBuilder =
       Value<String?> expectedResult,
       Value<DateTime?> lastModifiedUtc,
       Value<String?> parentCaseId,
+      Value<int> totalSteps,
+      Value<int> passedSteps,
       Value<int> rowid,
     });
 
@@ -5984,6 +6087,16 @@ class $$TestCasesTableFilterComposer
 
   ColumnFilters<DateTime> get lastModifiedUtc => $composableBuilder(
     column: $table.lastModifiedUtc,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalSteps => $composableBuilder(
+    column: $table.totalSteps,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get passedSteps => $composableBuilder(
+    column: $table.passedSteps,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -6141,6 +6254,16 @@ class $$TestCasesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get totalSteps => $composableBuilder(
+    column: $table.totalSteps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get passedSteps => $composableBuilder(
+    column: $table.passedSteps,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$TestPlansTableOrderingComposer get planId {
     final $$TestPlansTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -6236,6 +6359,16 @@ class $$TestCasesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastModifiedUtc => $composableBuilder(
     column: $table.lastModifiedUtc,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalSteps => $composableBuilder(
+    column: $table.totalSteps,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get passedSteps => $composableBuilder(
+    column: $table.passedSteps,
     builder: (column) => column,
   );
 
@@ -6401,6 +6534,8 @@ class $$TestCasesTableTableManager
                 Value<String?> expectedResult = const Value.absent(),
                 Value<DateTime?> lastModifiedUtc = const Value.absent(),
                 Value<String?> parentCaseId = const Value.absent(),
+                Value<int> totalSteps = const Value.absent(),
+                Value<int> passedSteps = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TestCasesCompanion(
                 id: id,
@@ -6411,6 +6546,8 @@ class $$TestCasesTableTableManager
                 expectedResult: expectedResult,
                 lastModifiedUtc: lastModifiedUtc,
                 parentCaseId: parentCaseId,
+                totalSteps: totalSteps,
+                passedSteps: passedSteps,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -6423,6 +6560,8 @@ class $$TestCasesTableTableManager
                 Value<String?> expectedResult = const Value.absent(),
                 Value<DateTime?> lastModifiedUtc = const Value.absent(),
                 Value<String?> parentCaseId = const Value.absent(),
+                Value<int> totalSteps = const Value.absent(),
+                Value<int> passedSteps = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => TestCasesCompanion.insert(
                 id: id,
@@ -6433,6 +6572,8 @@ class $$TestCasesTableTableManager
                 expectedResult: expectedResult,
                 lastModifiedUtc: lastModifiedUtc,
                 parentCaseId: parentCaseId,
+                totalSteps: totalSteps,
+                passedSteps: passedSteps,
                 rowid: rowid,
               ),
           withReferenceMapper:

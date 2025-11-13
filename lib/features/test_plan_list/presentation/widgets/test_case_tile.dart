@@ -33,25 +33,46 @@ class TestCaseTile extends StatelessWidget {
           testCase.title,
           style: const TextStyle(fontWeight: FontWeight.w600),
         ),
-        subtitle: Row(
+
+        // ---------------------------------------------------------------
+        // 🔥 Wyświetlanie POSTĘPU kroków: Passed / Total
+        // ---------------------------------------------------------------
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Status: '),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Text(
-                testCase.status,
-                style: TextStyle(
-                  color: color,
-                  fontWeight: FontWeight.w600,
+            Row(
+              children: [
+                const Text("Status: "),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    testCase.status,
+                    style: TextStyle(
+                      color: color,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
+              ],
+            ),
+
+            const SizedBox(height: 4),
+
+            // 🔥 Wyświetlanie PASSED/TOTAL
+            Text(
+              "Kroki: ${testCase.passedSteps} / ${testCase.totalSteps}",
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],
         ),
+
         trailing: PopupMenuButton<String>(
           onSelected: (v) {
             if (v == 'edit') _openEditDialog(context);
@@ -62,28 +83,29 @@ class TestCaseTile extends StatelessWidget {
             PopupMenuItem(value: 'delete', child: Text('Usuń')),
           ],
         ),
-        onTap: () {
-          context.push('/cases/${testCase.id}/steps', extra: {
-            'planId': planId,
-            'moduleId': moduleId,
-            'projectId': projectId,
-          });
-        },
+
+          onTap: () async {
+            await context.push('/cases/${testCase.id}/steps', extra: {
+              'planId': planId,
+              'moduleId': moduleId,
+              'projectId': projectId,
+            });
+
+            // ⬅️ Po powrocie automatyczny refresh
+            context.read<TestPlanBloc>().add(GetTestCasesForPlanEvent(planId));
+          }
+
       ),
     );
   }
 
+  // ---------------------------------------------------------------
+  // Edycja TestCase (BEZ statusu!)
+  // ---------------------------------------------------------------
   void _openEditDialog(BuildContext context) {
     final titleCtrl = TextEditingController(text: testCase.title);
     final expectedCtrl =
     TextEditingController(text: testCase.expectedResult ?? '');
-    String current = testCase.status;
-
-    final statuses = const ['Pending', 'NotRun', 'Passed', 'Failed', 'Blocked'];
-
-    if (!statuses.contains(current)) {
-      current = 'Pending';
-    }
 
     showDialog(
       context: context,
@@ -92,37 +114,9 @@ class TestCaseTile extends StatelessWidget {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Tytuł'),
-            ),
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Tytuł')),
             const SizedBox(height: 8),
-            TextField(
-              controller: expectedCtrl,
-              decoration:
-              const InputDecoration(labelText: 'Oczekiwany rezultat'),
-            ),
-            const SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: current,
-              decoration: const InputDecoration(labelText: 'Status'),
-              items: statuses.map((s) {
-                return DropdownMenuItem<String>(
-                  value: s,
-                  child: Text(
-                    switch (s) {
-                      'Passed' => '✅ Passed',
-                      'Failed' => '❌ Failed',
-                      'Blocked' => '⛔ Blocked',
-                      'NotRun' => '⚪ Not Run',
-                      'Pending' => '🕓 Pending',
-                      _ => s,
-                    },
-                  ),
-                );
-              }).toList(),
-              onChanged: (v) => current = v ?? testCase.status,
-            ),
+            TextField(controller: expectedCtrl, decoration: const InputDecoration(labelText: 'Oczekiwany rezultat')),
           ],
         ),
         actions: [
@@ -132,16 +126,24 @@ class TestCaseTile extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              final title = titleCtrl.text.trim();
-              if (title.isEmpty) return;
-
-              final updated = testCase.copyWith(
-                title: title,
+              final updated = TestCaseEntity(
+                id: testCase.id,
+                planId: testCase.planId,
+                title: titleCtrl.text.trim(),
                 expectedResult: expectedCtrl.text.trim().isEmpty
                     ? null
                     : expectedCtrl.text.trim(),
-                status: current,
+
+                // 🔥 NIE ZMIENIAMY STATUSU — to robi TestStepBloc
+                status: testCase.status,
+
+                assignedToUserId: testCase.assignedToUserId,
                 lastModifiedUtc: DateTime.now().toUtc(),
+                parentCaseId: testCase.parentCaseId,
+
+                // 🔥 zachowujemy licznik kroków
+                totalSteps: testCase.totalSteps,
+                passedSteps: testCase.passedSteps,
               );
 
               context.read<TestPlanBloc>().add(UpdateTestCaseEvent(updated));
@@ -154,6 +156,9 @@ class TestCaseTile extends StatelessWidget {
     );
   }
 
+  // ---------------------------------------------------------------
+  // Usunięcie test case
+  // ---------------------------------------------------------------
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -161,10 +166,7 @@ class TestCaseTile extends StatelessWidget {
         title: const Text('Usuń Test Case'),
         content: Text('Czy na pewno chcesz usunąć „${testCase.title}”?'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Anuluj'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Anuluj')),
           ElevatedButton(
             onPressed: () {
               context.read<TestPlanBloc>().add(DeleteTestCaseEvent(testCase.id));
@@ -186,6 +188,7 @@ class TestCaseTile extends StatelessWidget {
       case 'Blocked':
         return Colors.orange;
       case 'NotRun':
+      case 'Pending':
         return Colors.grey;
       default:
         return Colors.blueGrey;

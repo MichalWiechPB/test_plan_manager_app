@@ -1,31 +1,30 @@
-import 'package:equatable/equatable.dart';
-
-class TestCaseEntity extends Equatable {
+class TestCaseEntity {
   final String id;
   final String planId;
   final String title;
   final String status;
-  final String? assignedToUserId;
   final String? expectedResult;
+  final String? assignedToUserId;
   final DateTime? lastModifiedUtc;
   final String? parentCaseId;
 
-  const TestCaseEntity({
+  final int totalSteps;
+  final int passedSteps;
+
+  TestCaseEntity({
     required this.id,
     required this.planId,
     required this.title,
     required this.status,
-    this.assignedToUserId,
     this.expectedResult,
+    this.assignedToUserId,
     this.lastModifiedUtc,
     this.parentCaseId,
+    this.totalSteps = 0,
+    this.passedSteps = 0,
   });
 
-  @override
-  List<Object?> get props =>
-      [id, planId, title, status, assignedToUserId, expectedResult, lastModifiedUtc, parentCaseId];
-}
-extension TestCaseEntityCopyWith on TestCaseEntity {
+  // 🔥 TU DODAJEMY copyWith
   TestCaseEntity copyWith({
     String? id,
     String? planId,
@@ -35,6 +34,8 @@ extension TestCaseEntityCopyWith on TestCaseEntity {
     String? assignedToUserId,
     DateTime? lastModifiedUtc,
     String? parentCaseId,
+    int? totalSteps,
+    int? passedSteps,
   }) {
     return TestCaseEntity(
       id: id ?? this.id,
@@ -45,7 +46,8 @@ extension TestCaseEntityCopyWith on TestCaseEntity {
       assignedToUserId: assignedToUserId ?? this.assignedToUserId,
       lastModifiedUtc: lastModifiedUtc ?? this.lastModifiedUtc,
       parentCaseId: parentCaseId ?? this.parentCaseId,
+      totalSteps: totalSteps ?? this.totalSteps,
+      passedSteps: passedSteps ?? this.passedSteps,
     );
   }
 }
-

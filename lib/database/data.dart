@@ -76,15 +76,18 @@ class TestCases extends Table {
   TextColumn get planId => text().references(TestPlans, #id)();
   TextColumn get title => text()();
   TextColumn get status => text()();
+
   TextColumn get assignedToUserId => text().nullable().references(Users, #id)();
   TextColumn get expectedResult => text().nullable()();
   DateTimeColumn get lastModifiedUtc => dateTime().nullable()();
   TextColumn get parentCaseId => text().nullable().references(TestCases, #id)();
-
+  IntColumn get totalSteps => integer().withDefault(const Constant(0))();
+  IntColumn get passedSteps => integer().withDefault(const Constant(0))();
 
   @override
   Set<Column> get primaryKey => {id};
 }
+
 
 
 @DataClassName('TestStep')
