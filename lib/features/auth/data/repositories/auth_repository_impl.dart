@@ -11,7 +11,7 @@ class AuthRepositoryImpl implements AuthRepository {
 
   static const _pkceKey = "pkce_verifier";
 
-  PkcePair? _pkce; // trzymamy tylko do generowania URL
+  PkcePair? _pkce;
 
   AuthRepositoryImpl({
     required this.remoteDataSource,
@@ -21,13 +21,10 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<String> createLoginUrl() async {
-    // 1. Generuj PKCE
     _pkce = pkceService.generate();
 
-    // 2. Zapisz verifier w bezpiecznym storage
     await secureStorage.write(key: _pkceKey, value: _pkce!.verifier);
 
-    // 3. Przygotuj parametry do URL
     final scope = Uri.encodeComponent(AuthConfig.scopes.join(" "));
     final redirect = Uri.encodeComponent(AuthConfig.redirectUri);
 
@@ -43,7 +40,6 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<String> loginWithCode(String code) async {
-    // 1. Pobierz verifier ze storage
     final storedVerifier = await secureStorage.read(key: _pkceKey);
 
     if (storedVerifier == null || storedVerifier.isEmpty) {
@@ -52,13 +48,11 @@ class AuthRepositoryImpl implements AuthRepository {
       );
     }
 
-    // 2. Wymień kod na token
     final token = await remoteDataSource.exchangeCode(
       code: code,
       verifier: storedVerifier,
     );
 
-    // 3. Usuń PKCE verifier po użyciu
     await secureStorage.delete(key: _pkceKey);
 
     return token;

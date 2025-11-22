@@ -12,6 +12,7 @@ class ModuleState extends Equatable {
   final List<String> visitedModules;
   final String? currentProjectId;
   final String? errorMessage;
+  final String? projectName;
 
   const ModuleState({
     required this.status,
@@ -21,6 +22,7 @@ class ModuleState extends Equatable {
     required this.visitedModules,
     this.currentProjectId,
     this.errorMessage,
+    this.projectName,
   });
 
   const ModuleState.initial()
@@ -30,7 +32,8 @@ class ModuleState extends Equatable {
         testPlans = const {},
         visitedModules = const [],
         currentProjectId = null,
-        errorMessage = null;
+        errorMessage = null,
+        projectName = null;
 
   ModuleState copyWith({
     ModuleStatus? status,
@@ -40,6 +43,7 @@ class ModuleState extends Equatable {
     List<String>? visitedModules,
     String? currentProjectId,
     String? errorMessage,
+    String? projectName,
   }) {
     return ModuleState(
       status: status ?? this.status,
@@ -49,6 +53,7 @@ class ModuleState extends Equatable {
       visitedModules: visitedModules ?? this.visitedModules,
       currentProjectId: currentProjectId ?? this.currentProjectId,
       errorMessage: errorMessage ?? this.errorMessage,
+      projectName: projectName ?? this.projectName,
     );
   }
 
@@ -61,5 +66,6 @@ class ModuleState extends Equatable {
     visitedModules,
     currentProjectId,
     errorMessage,
+    projectName,
   ];
 }

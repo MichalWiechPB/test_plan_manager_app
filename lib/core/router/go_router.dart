@@ -88,12 +88,15 @@ final GoRouter router = GoRouter(
           name: 'modules',
           builder: (context, state) {
             final projectId = state.pathParameters['projectId']!;
-            final projectName = state.extra as String? ?? 'Modules';
+            final projectName = context.read<ModuleBloc>().state.projectName ?? (state.extra as String? ?? 'Modules');
 
             final bloc = context.read<ModuleBloc>();
 
             if (bloc.state.modules.isEmpty) {
-              bloc.add(GetModulesForProjectEvent(projectId));
+              bloc.add(GetModulesForProjectEvent(
+                projectId,
+                projectName: projectName,
+              ));
             }
 
             return ModuleListPage(

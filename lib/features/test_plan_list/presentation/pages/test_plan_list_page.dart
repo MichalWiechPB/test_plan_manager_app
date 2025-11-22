@@ -179,21 +179,18 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
                               backgroundColor: Colors.grey.shade300,
                             ),
                             const SizedBox(height: 8),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 4,
                               children: [
                                 Text('✅ Passed: $passed',
-                                    style: const TextStyle(
-                                        color: Colors.green, fontSize: 13)),
+                                    style: const TextStyle(color: Colors.green, fontSize: 13)),
                                 Text('❌ Failed: $failed',
-                                    style: const TextStyle(
-                                        color: Colors.red, fontSize: 13)),
+                                    style: const TextStyle(color: Colors.red, fontSize: 13)),
                                 Text('⛔ Blocked: $blocked',
-                                    style: const TextStyle(
-                                        color: Colors.orange, fontSize: 13)),
+                                    style: const TextStyle(color: Colors.orange, fontSize: 13)),
                                 Text('⚪ NotRun: $notRun',
-                                    style: const TextStyle(
-                                        color: Colors.grey, fontSize: 13)),
+                                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
                               ],
                             ),
                             const SizedBox(height: 4),

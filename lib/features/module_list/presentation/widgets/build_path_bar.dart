@@ -23,7 +23,6 @@ Widget buildPathBar(
         children: [
           InkWell(
             onTap: () {
-              // Root: ustaw pustą ścieżkę i wróć na root
               bloc.add(SetVisitedPathEvent(projectId, const []));
               context.go('/modules/$projectId');
             },
@@ -45,7 +44,6 @@ Widget buildPathBar(
               onTap: i < visited.length - 1
                   ? () {
                 final targetId = visited[i];
-                // przytnij do klikniętego elementu (włącznie)
                 final shortened = visited.sublist(0, i + 1);
                 bloc.add(SetVisitedPathEvent(projectId, shortened));
                 context.go('/modules/$projectId/sub/$targetId');

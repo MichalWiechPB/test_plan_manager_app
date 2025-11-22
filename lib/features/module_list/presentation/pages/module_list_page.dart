@@ -34,7 +34,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.projectName),
+        title: Text(context.watch<ModuleBloc>().state.projectName ?? widget.projectName),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           tooltip: 'Back',

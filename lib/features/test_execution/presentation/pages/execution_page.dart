@@ -53,11 +53,32 @@ class _ExecutionPageState extends State<ExecutionPage> {
             title: const Text("Test Execution"),
             actions: [
               TextButton.icon(
-                onPressed: () {
-                  context
-                      .read<TestExecutionBloc>()
-                      .add(const ExportToFileEvent());
+                onPressed: () async {
+                  final result = await showDialog<bool>(
+                    context: context,
+                    builder: (ctx) => AlertDialog(
+                      title: const Text("Zakończyć testowanie?"),
+                      content: const Text("Czy chcesz wygenerować plik z wynikami?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(ctx, false),
+                          child: const Text("Nie"),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Navigator.pop(ctx, true),
+                          child: const Text("Tak"),
+                        ),
+                      ],
+                    ),
+                  );
+
+                  if (result == true) {
+                    context.read<TestExecutionBloc>().add(const ExportToFileEvent());
+                  } else if (result == false) {
+                    context.go('/projects');
+                  }
                 },
+
                 icon: const Icon(Icons.save_alt, color: Colors.white),
                 label: const Text(
                   "Zakończ testowanie",

@@ -13,7 +13,8 @@ abstract class ModuleEvent extends Equatable {
 /// 🔹 Pobiera moduły główne dla danego projektu
 class GetModulesForProjectEvent extends ModuleEvent {
   final String projectId;
-  const GetModulesForProjectEvent(this.projectId);
+  final String? projectName;
+  const GetModulesForProjectEvent(this.projectId, {this.projectName});
 
   @override
   List<Object?> get props => [projectId];
