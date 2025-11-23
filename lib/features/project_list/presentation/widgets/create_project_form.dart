@@ -22,44 +22,52 @@ class _CreateProjectFormState extends State<CreateProjectForm> {
     final project = ProjectEntity(
       id: 'project_${DateTime.now().millisecondsSinceEpoch}',
       name: _nameController.text.trim(),
-      description: _descriptionController.text.trim(),
+      description: _descriptionController.text.trim().isEmpty
+          ? null
+          : _descriptionController.text.trim(),
       createdAtUtc: DateTime.now().toUtc(),
     );
 
-    context.read<ProjectBloc>().add(CreateProjectEvent(project));
+    context.read<ProjectBloc>().add(
+      ProjectEvent.create(project: project),
+    );
+
     Navigator.of(context).pop(true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 24,
-      ),
+      padding: EdgeInsets.fromLTRB(16.0, 24.0, 16.0, bottomInset + 16.0),
       child: Form(
         key: _formKey,
-        child: Wrap(
-          runSpacing: 16,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Nowy projekt',
-                style: Theme.of(context).textTheme.headlineSmall),
+            Text(
+              'Nowy projekt',
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16.0),
             TextFormField(
               controller: _nameController,
               decoration: const InputDecoration(labelText: 'Nazwa projektu'),
               validator: (v) =>
-              v == null || v.isEmpty ? 'Podaj nazwę projektu' : null,
+              v == null || v.trim().isEmpty ? 'Podaj nazwę projektu' : null,
             ),
+            const SizedBox(height: 16.0),
             TextFormField(
               controller: _descriptionController,
               decoration: const InputDecoration(labelText: 'Opis projektu'),
               maxLines: 3,
             ),
+            const SizedBox(height: 24.0),
             Align(
               alignment: Alignment.centerRight,
-              child: ElevatedButton(
+              child: FilledButton(
                 onPressed: _submit,
                 child: const Text('Zapisz'),
               ),

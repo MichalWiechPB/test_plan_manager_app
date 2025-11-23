@@ -2,7 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:drift/drift.dart' as drift;
 import '../../../../core/error/failures.dart';
 import '../../../../database/daos/test_steps_dao.dart';
-import '../../../../database/data.dart';
+import '../../../../database/drift_database/data.dart';
 import '../../domain/entities/test_step.dart';
 import '../../domain/repository/test_case_repository.dart';
 

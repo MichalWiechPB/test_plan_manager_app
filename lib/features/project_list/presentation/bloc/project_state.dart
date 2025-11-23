@@ -1,36 +1,19 @@
-import 'package:equatable/equatable.dart';
-import '../../domain/entities/project.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:test_plan_manager_app/features/project_list/domain/entities/project.dart';
 
-enum ProjectStatus { initial, loading, success, failure }
+part 'project_state.freezed.dart';
 
-class ProjectState extends Equatable {
-  final ProjectStatus status;
-  final List<ProjectEntity> projects;
-  final String? errorMessage;
+@freezed
+sealed class ProjectState with _$ProjectState {
+  const factory ProjectState.initial() = ProjectInitial;
 
-  const ProjectState({
-    required this.status,
-    required this.projects,
-    this.errorMessage,
-  });
+  const factory ProjectState.loading() = ProjectLoading;
 
-  const ProjectState.initial()
-      : status = ProjectStatus.initial,
-        projects = const [],
-        errorMessage = null;
+  const factory ProjectState.success({
+    required List<ProjectEntity> projects,
+  }) = ProjectSuccess;
 
-  ProjectState copyWith({
-    ProjectStatus? status,
-    List<ProjectEntity>? projects,
-    String? errorMessage,
-  }) {
-    return ProjectState(
-      status: status ?? this.status,
-      projects: projects ?? this.projects,
-      errorMessage: errorMessage,
-    );
-  }
-
-  @override
-  List<Object?> get props => [status, projects, errorMessage];
+  const factory ProjectState.failure({
+    required String errorMessage,
+  }) = ProjectFailure;
 }

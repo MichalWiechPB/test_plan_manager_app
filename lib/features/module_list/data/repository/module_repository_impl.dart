@@ -5,7 +5,7 @@ import 'package:test_plan_manager_app/features/module_list/data/models/dtos/test
 import '../../../../core/error/failures.dart';
 import '../../../../database/daos/module_dao.dart';
 import '../../../../database/daos/test_plans_dao.dart';
-import '../../../../database/data.dart';
+import '../../../../database/drift_database/data.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 import '../../domain/repository/module_repository.dart';

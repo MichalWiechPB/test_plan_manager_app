@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
+import '../../../project_list/domain/entities/project.dart';
+import '../../../test_step_list/domain/entities/test_step.dart';
+import '../../domain/entities/project_structure.dart';
 import '../bloc/test_execution_bloc.dart';
 import '../bloc/test_execution_event.dart';
 import '../bloc/test_execution_state.dart';
-import '../../domain/entities/project_structure.dart';
-import '../../../test_case_list/domain/entities/test_step.dart';
 
 class ExecutionPage extends StatefulWidget {
   const ExecutionPage({super.key});
@@ -24,145 +24,116 @@ class _ExecutionPageState extends State<ExecutionPage> {
   @override
   void initState() {
     super.initState();
-    context.read<TestExecutionBloc>().add(const GetAllProjectsForTestsEvent());
+    context.read<TestExecutionBloc>().add(const TestExecutionEvent.getAllProjectsForTests());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<TestExecutionBloc, TestExecutionState>(
       listener: (context, state) {
-        if (state.errorMessage != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
-
-          // SUKCES eksportu — przekierowanie
-          if (state.errorMessage != null &&
-              state.errorMessage!.startsWith("Plik zapisano")) {
-
-            Future.delayed(const Duration(milliseconds: 400), () {
-              context.go('/projects');
-            });
-          }
-
-        }
+        state.maybeWhen(
+          failure: (msg) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(msg)),
+            );
+          },
+          orElse: () {},
+        );
       },
       builder: (context, state) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text("Test Execution"),
-            actions: [
-              TextButton.icon(
-                onPressed: () async {
-                  final result = await showDialog<bool>(
-                    context: context,
-                    builder: (ctx) => AlertDialog(
-                      title: const Text("Zakończyć testowanie?"),
-                      content: const Text("Czy chcesz wygenerować plik z wynikami?"),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text("Nie"),
-                        ),
-                        ElevatedButton(
-                          onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text("Tak"),
-                        ),
-                      ],
-                    ),
-                  );
-
-                  if (result == true) {
-                    context.read<TestExecutionBloc>().add(const ExportToFileEvent());
-                  } else if (result == false) {
-                    context.go('/projects');
-                  }
-                },
-
-                icon: const Icon(Icons.save_alt, color: Colors.white),
-                label: const Text(
-                  "Zakończ testowanie",
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-            ],
+          appBar: _appBar(),
+          body: state.when(
+            initial: () => const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            failure: (msg) => Center(child: Text(msg)),
+            success: (projects, structure) => _buildBody(projects, structure),
           ),
-          body: state.loading
-              ? const Center(child: CircularProgressIndicator())
-              : _buildBody(state),
         );
       },
     );
   }
 
-  // ----------------------------------------------------
-  // BODY
-  // ----------------------------------------------------
-  Widget _buildBody(TestExecutionState state) {
-    final projects = state.projects;
-    final structure = state.structure;
+  AppBar _appBar() {
+    return AppBar(
+      title: const Text("Test Execution"),
+      actions: [
+        TextButton.icon(
+          onPressed: _finishSession,
+          icon: const Icon(Icons.save_alt, color: Colors.white),
+          label: const Text(
+            "Zakończ testowanie",
+            style: TextStyle(color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
 
+  Widget _buildBody(
+      List<ProjectEntity> projects,
+      ProjectStructureEntity? structure,
+      ) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          DropdownButton<String>(
-            value: selectedProjectId,
-            isExpanded: true,
-            hint: const Text("Wybierz projekt"),
-            items: projects
-                .map(
-                  (p) => DropdownMenuItem(
-                value: p.id,
-                child: Text(p.name),
-              ),
-            )
-                .toList(),
-            onChanged: (value) {
-              if (value == null) return;
-              setState(() {
-                selectedProjectId = value;
-                selectedModuleId = null;
-                selectedPlanId = null;
-                selectedCaseId = null;
-              });
-              context
-                  .read<TestExecutionBloc>()
-                  .add(GetProjectStructureEvent(value));
-            },
-          ),
-
+          _projectPicker(projects),
           const SizedBox(height: 16),
-
           if (structure != null) ...[
-            _buildModulePicker(structure),
+            _modulePicker(structure),
             const SizedBox(height: 16),
-            _buildPlanPicker(structure),
+            _planPicker(structure),
             const SizedBox(height: 16),
-            _buildCasePicker(structure),
+            _casePicker(structure),
             const SizedBox(height: 16),
-            Expanded(child: _buildStepsView(structure)),
+            Expanded(child: _stepsView(structure)),
           ],
         ],
       ),
     );
   }
 
-  // ----------------------------------------------------
-  // MODULE
-  // ----------------------------------------------------
-  Widget _buildModulePicker(ProjectStructureEntity structure) {
-    final flatModules = _flattenModules(structure.modules);
+  Widget _projectPicker(List<ProjectEntity> projects) {
+    return DropdownButton<String>(
+      isExpanded: true,
+      value: selectedProjectId,
+      hint: const Text("Wybierz projekt"),
+      items: projects
+          .map(
+            (p) => DropdownMenuItem(
+          value: p.id,
+          child: Text(p.name),
+        ),
+      )
+          .toList(),
+      onChanged: (value) {
+        if (value == null) return;
+        setState(() {
+          selectedProjectId = value;
+          selectedModuleId = null;
+          selectedPlanId = null;
+          selectedCaseId = null;
+        });
+        context.read<TestExecutionBloc>().add(
+          TestExecutionEvent.getProjectStructure(projectId: value),
+        );
+      },
+    );
+  }
+
+  Widget _modulePicker(ProjectStructureEntity structure) {
+    final items = structure.modules;
 
     return DropdownButton<String>(
       isExpanded: true,
       value: selectedModuleId,
       hint: const Text("Wybierz moduł"),
-      items: flatModules
+      items: items
           .map(
             (m) => DropdownMenuItem(
-          value: m.id,
-          child: Text(m.label),
+          value: m.module.id,
+          child: Text(m.module.name),
         ),
       )
           .toList(),
@@ -176,16 +147,9 @@ class _ExecutionPageState extends State<ExecutionPage> {
     );
   }
 
-  // ----------------------------------------------------
-  // PLAN
-  // ----------------------------------------------------
-  Widget _buildPlanPicker(ProjectStructureEntity structure) {
-    if (selectedModuleId == null) {
-      return const SizedBox.shrink();
-    }
-
-    final module = _findModule(structure, selectedModuleId!);
-    if (module == null) return const SizedBox.shrink();
+  Widget _planPicker(ProjectStructureEntity structure) {
+    if (selectedModuleId == null) return const SizedBox.shrink();
+    final module = structure.modules.firstWhere((m) => m.module.id == selectedModuleId);
 
     return DropdownButton<String>(
       isExpanded: true,
@@ -208,17 +172,10 @@ class _ExecutionPageState extends State<ExecutionPage> {
     );
   }
 
-  // ----------------------------------------------------
-  // TEST CASE
-  // ----------------------------------------------------
-  Widget _buildCasePicker(ProjectStructureEntity structure) {
-    if (selectedModuleId == null || selectedPlanId == null) {
-      return const SizedBox.shrink();
-    }
+  Widget _casePicker(ProjectStructureEntity structure) {
+    if (selectedModuleId == null || selectedPlanId == null) return const SizedBox.shrink();
 
-    final module = _findModule(structure, selectedModuleId!);
-    if (module == null) return const SizedBox.shrink();
-
+    final module = structure.modules.firstWhere((m) => m.module.id == selectedModuleId);
     final plan = module.plans.firstWhere((p) => p.plan.id == selectedPlanId);
 
     return DropdownButton<String>(
@@ -234,117 +191,103 @@ class _ExecutionPageState extends State<ExecutionPage> {
       )
           .toList(),
       onChanged: (value) {
-        setState(() {
-          selectedCaseId = value;
-        });
+        setState(() => selectedCaseId = value);
       },
     );
   }
 
-  // ----------------------------------------------------
-  // STEPS
-  // ----------------------------------------------------
-  Widget _buildStepsView(ProjectStructureEntity structure) {
+  Widget _stepsView(ProjectStructureEntity structure) {
     if (selectedModuleId == null ||
         selectedPlanId == null ||
         selectedCaseId == null) {
       return const Center(child: Text("Wybierz test case"));
     }
 
-    final module = _findModule(structure, selectedModuleId!)!;
+    final module = structure.modules.firstWhere((m) => m.module.id == selectedModuleId);
     final plan = module.plans.firstWhere((p) => p.plan.id == selectedPlanId);
-    final caseNode =
-    plan.cases.firstWhere((c) => c.testCase.id == selectedCaseId);
+    final caseNode = plan.cases.firstWhere((c) => c.testCase.id == selectedCaseId);
 
-    return ListView.builder(
-      itemCount: caseNode.steps.length,
-      itemBuilder: (context, index) {
-        final step = caseNode.steps[index];
-
-        return Card(
-          margin: const EdgeInsets.symmetric(vertical: 8),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text("Krok ${step.stepNumber}",
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-                const SizedBox(height: 6),
-                Text(step.description),
-                const SizedBox(height: 12),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      _statusButton("Passed", () {
-                        _updateStatus(step, "passed");
-                      }),
-                      _statusButton("Failed", () {
-                        _updateStatus(step, "failed");
-                      }),
-                      _statusButton("Blocked", () {
-                        _updateStatus(step, "blocked");
-                      }),
-                      _statusButton("Skipped", () {
-                        _updateStatus(step, "skipped");
-                      }),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-        );
-      },
+    return ListView(
+      children: caseNode.steps.map(_stepCard).toList(),
     );
   }
 
-  // ----------------------------------------------------
-  // HELPERS
-  // ----------------------------------------------------
-
-  Widget _statusButton(String label, VoidCallback onPressed) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: OutlinedButton(
-        onPressed: onPressed,
-        child: Text(label),
+  Widget _stepCard(TestStepEntity s) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 8),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Krok ${s.stepNumber}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 6),
+            Text(s.description),
+            const SizedBox(height: 12),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  _statusBtn("Passed", () => _update(s, "Passed")),
+                  _statusBtn("Failed", () => _update(s, "Failed")),
+                  _statusBtn("Blocked", () => _update(s, "Blocked")),
+                  _statusBtn("Skipped", () => _update(s, "Skipped")),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _updateStatus(TestStepEntity step, String status) {
+  Widget _statusBtn(String txt, VoidCallback cb) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: OutlinedButton(
+        onPressed: cb,
+        child: Text(txt),
+      ),
+    );
+  }
+
+
+  void _update(TestStepEntity s, String st) {
     context.read<TestExecutionBloc>().add(
-      UpdateStepTempStatusEvent(
-        StepStatusPathEntity(
+      TestExecutionEvent.updateStepTempStatus(
+        stepStatus: StepStatusPathEntity(
           projectId: selectedProjectId!,
           moduleId: selectedModuleId!,
           planId: selectedPlanId!,
           caseId: selectedCaseId!,
-          stepId: step.id,
-          newStatus: status,
+          stepId: s.id,
+          newStatus: st,
           timestamp: DateTime.now(),
         ),
       ),
     );
   }
 
-  ModuleStructureEntity? _findModule(
-      ProjectStructureEntity structure, String id) {
-    return structure.modules.firstWhere((m) => m.module.id == id);
+  Future<void> _finishSession() async {
+    final res = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Zakończyć testowanie?"),
+        content: const Text("Wyeksportować raport?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Nie")),
+          ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Tak")),
+        ],
+      ),
+    );
+
+    if (res == true) {
+      context.read<TestExecutionBloc>().add(const TestExecutionEvent.exportToFile());
+    } else {
+      context.go('/projects');
+    }
   }
-
-  List<_ModuleItem> _flattenModules(List<ModuleStructureEntity> roots) {
-    return roots
-        .map((m) => _ModuleItem(id: m.module.id, label: m.module.name))
-        .toList();
-  }
-}
-
-class _ModuleItem {
-  final String id;
-  final String label;
-
-  const _ModuleItem({required this.id, required this.label});
 }

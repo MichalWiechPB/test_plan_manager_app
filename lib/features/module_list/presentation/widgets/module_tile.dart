@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import '../../../module_list/domain/entities/module.dart';
 import '../bloc/module_bloc.dart';
 import '../bloc/module_event.dart';
+import '../bloc/module_state.dart';
+import '../../../module_list/domain/entities/module.dart';
 import 'preview_item.dart';
 
 class ModuleTile extends StatefulWidget {
@@ -25,24 +26,36 @@ class _ModuleTileState extends State<ModuleTile> {
       final bloc = context.read<ModuleBloc>();
       final id = widget.module.id;
 
-      final hasPreview =
-          (bloc.state.submodules[id]?.isNotEmpty ?? false) ||
-              (bloc.state.testPlans[id]?.isNotEmpty ?? false);
+      final hasPreview = bloc.state.maybeWhen(
+        success: (_, submodules, testPlans, __, ___, ____) {
+          final subs = submodules[id];
+          final plans = testPlans[id];
+          return (subs != null && subs.isNotEmpty) ||
+              (plans != null && plans.isNotEmpty);
+        },
+        orElse: () => false,
+      );
 
       if (!hasPreview) {
-        bloc.add(LoadPreviewForModuleEvent(id));
+        bloc.add(
+          ModuleEvent.loadPreviewForModule(moduleId: id),
+        );
       }
     }
   }
 
-  void _goToModule(BuildContext context) {
+  void _openModule(BuildContext context) {
     final m = widget.module;
-    context.read<ModuleBloc>().add(GetSubmodulesForModuleEvent(m.id));
 
-    final routerState = GoRouterState.of(context);
-    final projectName = routerState.extra as String? ?? 'Modules';
+    context.read<ModuleBloc>().add(
+      ModuleEvent.getSubmodulesForModule(moduleId: m.id),
+    );
 
-    context.go('/modules/${m.projectId}/sub/${m.id}', extra: projectName);
+    final projectName = GoRouterState.of(context).extra as String?;
+    context.go(
+      '/modules/${m.projectId}/sub/${m.id}',
+      extra: projectName,
+    );
   }
 
   @override
@@ -50,28 +63,37 @@ class _ModuleTileState extends State<ModuleTile> {
     final state = context.watch<ModuleBloc>().state;
     final m = widget.module;
 
-    final submodules = state.submodules[m.id] ?? [];
-    final testPlans = state.testPlans[m.id] ?? [];
-    final preview = [
-      ...submodules.map((s) => PreviewItem(name: s.name)),
-      ...testPlans.map((p) => PreviewItem(name: p.name)),
+    final subs = state.maybeWhen(
+      success: (_, submodules, __, ___, ____, ______) =>
+      submodules[m.id] ?? const [],
+      orElse: () => const [],
+    );
+
+    final plans = state.maybeWhen(
+      success: (_, __, testPlans, ___, ____, ______) =>
+      testPlans[m.id] ?? const [],
+      orElse: () => const [],
+    );
+
+    final previewItems = [
+      ...subs.map((s) => PreviewItem(name: s.name)),
+      ...plans.map((p) => PreviewItem(name: p.name)),
     ].take(3).toList();
 
-    const double indent = 22;
+    final description = m.description;
 
     return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 2,
+      margin: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      elevation: 2.0,
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(12.0),
         onTap: _togglePreview,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 6.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🔹 Nagłówek z nazwą, menu i strzałką
               Row(
                 children: [
                   Expanded(
@@ -79,7 +101,7 @@ class _ModuleTileState extends State<ModuleTile> {
                       m.name,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                        fontSize: 16.0,
                       ),
                     ),
                   ),
@@ -89,30 +111,33 @@ class _ModuleTileState extends State<ModuleTile> {
                       if (v == 'delete') _confirmDelete(context);
                     },
                     itemBuilder: (context) => const [
-                      PopupMenuItem(value: 'edit', child: Text('Edytuj')),
-                      PopupMenuItem(value: 'delete', child: Text('Usuń')),
+                      PopupMenuItem(
+                        value: 'edit',
+                        child: Text('Edytuj'),
+                      ),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text('Usuń'),
+                      ),
                     ],
                   ),
                   IconButton(
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: () => _goToModule(context),
-                    splashRadius: 22,
+                    onPressed: () => _openModule(context),
+                    splashRadius: 22.0,
                   ),
                 ],
               ),
-
-              if ((m.description ?? '').isNotEmpty)
+              if (description != null && description.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 4.0),
                   child: Text(
-                    m.description!,
+                    description,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(color: Colors.black54),
                   ),
                 ),
-
-              // 🔹 Sekcja podglądu (preview)
               AnimatedCrossFade(
                 duration: const Duration(milliseconds: 200),
                 crossFadeState: _isExpanded
@@ -120,36 +145,32 @@ class _ModuleTileState extends State<ModuleTile> {
                     : CrossFadeState.showFirst,
                 firstChild: const SizedBox.shrink(),
                 secondChild: Padding(
-                  padding: const EdgeInsets.only(top: 6, left: indent, bottom: 6),
+                  padding:
+                  const EdgeInsets.only(left: 22.0, top: 6.0, bottom: 6.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      ...preview.map(
+                      ...previewItems.map(
                             (item) => GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: () => _goToModule(context),
+                          onTap: () => _openModule(context),
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 2.0),
+                            padding:
+                            const EdgeInsets.symmetric(vertical: 2.0),
                             child: Text(
                               '• ${item.name}',
-                              style: const TextStyle(fontSize: 13),
+                              style: const TextStyle(fontSize: 13.0),
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                         ),
                       ),
-                      if (submodules.length + testPlans.length > 3)
-                        Padding(
-                          padding: const EdgeInsets.only(top: 2),
-                          child: TextButton(
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: const Size(0, 24),
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: () => _goToModule(context),
-                            child: const Text('Zobacz więcej'),
+                      if (subs.length + plans.length > 3)
+                        TextButton(
+                          onPressed: () => _openModule(context),
+                          style: TextButton.styleFrom(
+                            padding: EdgeInsets.zero,
                           ),
+                          child: const Text('Zobacz więcej'),
                         ),
                     ],
                   ),
@@ -162,10 +183,10 @@ class _ModuleTileState extends State<ModuleTile> {
     );
   }
 
-  // ——— Edycja modułu
   void _openEditDialog(BuildContext context) {
     final nameCtrl = TextEditingController(text: widget.module.name);
-    final descCtrl = TextEditingController(text: widget.module.description ?? '');
+    final descCtrl =
+    TextEditingController(text: widget.module.description ?? '');
 
     showDialog(
       context: context,
@@ -174,27 +195,36 @@ class _ModuleTileState extends State<ModuleTile> {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameCtrl, decoration: const InputDecoration(labelText: 'Nazwa')),
-            TextField(controller: descCtrl, decoration: const InputDecoration(labelText: 'Opis')),
+            TextField(
+              controller: nameCtrl,
+              decoration: const InputDecoration(labelText: 'Nazwa'),
+            ),
+            TextField(
+              controller: descCtrl,
+              decoration: const InputDecoration(labelText: 'Opis'),
+            ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Anuluj')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
           ElevatedButton(
             onPressed: () {
-              final name = nameCtrl.text.trim();
-              final desc = descCtrl.text.trim();
-              if (name.isEmpty) return;
-
               final updated = ModuleEntity(
                 id: widget.module.id,
-                name: name,
-                description: desc.isEmpty ? null : desc,
+                name: nameCtrl.text.trim(),
+                description: descCtrl.text.trim().isEmpty
+                    ? null
+                    : descCtrl.text.trim(),
                 projectId: widget.module.projectId,
                 parentModuleId: widget.module.parentModuleId,
               );
 
-              context.read<ModuleBloc>().add(UpdateModuleEvent(updated));
+              context.read<ModuleBloc>().add(
+                ModuleEvent.updateModule(module: updated),
+              );
               Navigator.pop(ctx);
             },
             child: const Text('Zapisz'),
@@ -204,7 +234,6 @@ class _ModuleTileState extends State<ModuleTile> {
     );
   }
 
-  // ——— Usuwanie modułu
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
@@ -212,10 +241,15 @@ class _ModuleTileState extends State<ModuleTile> {
         title: const Text('Usuń moduł'),
         content: Text('Czy na pewno chcesz usunąć „${widget.module.name}”?'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Anuluj')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
           ElevatedButton(
             onPressed: () {
-              context.read<ModuleBloc>().add(DeleteModuleEvent(widget.module.id));
+              context.read<ModuleBloc>().add(
+                ModuleEvent.deleteModule(moduleId: widget.module.id),
+              );
               Navigator.pop(ctx);
             },
             child: const Text('Usuń'),

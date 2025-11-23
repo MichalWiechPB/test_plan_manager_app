@@ -1,36 +1,19 @@
-import 'package:equatable/equatable.dart';
-import '../../domain/entities/test_case.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:test_plan_manager_app/features/test_plan_list/domain/entities/test_case.dart';
 
-enum TestPlanStatus { initial, loading, success, failure }
+part 'test_plan_state.freezed.dart';
 
-class TestPlanState extends Equatable {
-  final TestPlanStatus status;
-  final List<TestCaseEntity> testCases;
-  final String? errorMessage;
+@freezed
+sealed class TestPlanState with _$TestPlanState {
+  const factory TestPlanState.initial() = TestPlanInitial;
 
-  const TestPlanState({
-    required this.status,
-    required this.testCases,
-    this.errorMessage,
-  });
+  const factory TestPlanState.loading() = TestPlanLoading;
 
-  const TestPlanState.initial()
-      : status = TestPlanStatus.initial,
-        testCases = const [],
-        errorMessage = null;
+  const factory TestPlanState.success({
+    required List<TestCaseEntity> testCases,
+  }) = TestPlanSuccess;
 
-  TestPlanState copyWith({
-    TestPlanStatus? status,
-    List<TestCaseEntity>? testCases,
-    String? errorMessage,
-  }) {
-    return TestPlanState(
-      status: status ?? this.status,
-      testCases: testCases ?? this.testCases,
-      errorMessage: errorMessage,
-    );
-  }
-
-  @override
-  List<Object?> get props => [status, testCases, errorMessage];
+  const factory TestPlanState.failure({
+    required String errorMessage,
+  }) = TestPlanFailure;
 }

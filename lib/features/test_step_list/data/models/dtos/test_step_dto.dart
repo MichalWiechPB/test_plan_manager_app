@@ -1,4 +1,4 @@
-import '../../../../../database/data.dart';
+import '../../../../../database/drift_database/data.dart';
 import '../../../domain/entities/test_step.dart';
 
 extension TestStepMapper on TestStep {

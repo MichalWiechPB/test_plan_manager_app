@@ -1,7 +1,6 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_plan_manager_app/features/auth/presentation/pages/microsoft_login_page.dart';
+import 'package:test_plan_manager_app/features/module_list/presentation/bloc/module_state.dart';
 
 import '../../dependency_injection/service_locator.dart';
 
@@ -9,53 +8,47 @@ import '../../dependency_injection/service_locator.dart';
 import '../../features/auth/presentation/bloc/auth_bloc.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/auth/presentation/pages/start_page.dart';
-import '../../features/project_list/presentation/bloc/project_bloc.dart';
-import '../../features/project_list/presentation/bloc/project_event.dart';
-import '../../features/project_list/presentation/pages/project_list_page.dart';
-
-// MODULES
-import '../../features/module_list/presentation/bloc/module_bloc.dart';
-import '../../features/module_list/presentation/bloc/module_event.dart';
-import '../../features/module_list/presentation/pages/module_list_page.dart';
-
-// PLANS
-import '../../features/test_plan_list/presentation/bloc/test_plan_bloc.dart';
-import '../../features/test_plan_list/presentation/bloc/test_plan_event.dart';
-import '../../features/test_plan_list/presentation/pages/test_plan_list_page.dart';
-
-// TEST CASES
-import '../../features/test_case_list/presentation/bloc/test_case_bloc.dart';
-import '../../features/test_case_list/presentation/bloc/test_case_event.dart';
-import '../../features/test_case_list/presentation/pages/test_cases_page.dart';
 
 // COMMENTS
 import '../../features/comments/presentation/bloc/comment_bloc.dart';
 import '../../features/comments/presentation/bloc/comment_event.dart';
 import '../../features/comments/presentation/pages/comment_page.dart';
 
+// MODULES
+import '../../features/module_list/presentation/bloc/module_bloc.dart';
+import '../../features/module_list/presentation/bloc/module_event.dart';
+import '../../features/module_list/presentation/pages/module_list_page.dart';
+import '../../features/project_list/presentation/bloc/project_bloc.dart';
+import '../../features/project_list/presentation/bloc/project_event.dart';
+import '../../features/project_list/presentation/pages/project_list_page.dart';
+import '../../features/test_step_list/presentation/pages/test_cases_page.dart';
+
 // EXECUTION
 import '../../features/test_execution/presentation/bloc/test_execution_bloc.dart';
 import '../../features/test_execution/presentation/bloc/test_execution_event.dart';
 import '../../features/test_execution/presentation/pages/execution_page.dart';
+import '../../features/test_plan_list/presentation/pages/test_plan_list_page.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/start',
   routes: [
     GoRoute(
       path: '/start',
-      builder: (context, state) => BlocProvider(
-        create: (_) => sl<AuthBloc>(),
-        child: const StartPage(),
-      ),
+      builder:
+          (context, state) => BlocProvider(
+            create: (_) => sl<AuthBloc>(),
+            child: const StartPage(),
+          ),
     ),
 
     // LOGIN PAGE
     GoRoute(
       path: '/login',
-      builder: (context, state) => BlocProvider.value(
-        value: sl<AuthBloc>(),
-        child: const LoginPage(),
-      ),
+      builder:
+          (context, state) => BlocProvider.value(
+            value: sl<AuthBloc>(),
+            child: const LoginPage(),
+          ),
     ),
 
     //------------------------------------------------------------
@@ -77,10 +70,7 @@ final GoRouter router = GoRouter(
     //------------------------------------------------------------
     ShellRoute(
       builder: (context, state, child) {
-        return BlocProvider(
-          create: (_) => sl<ModuleBloc>(),
-          child: child,
-        );
+        return BlocProvider(create: (_) => sl<ModuleBloc>(), child: child);
       },
       routes: [
         GoRoute(
@@ -88,16 +78,24 @@ final GoRouter router = GoRouter(
           name: 'modules',
           builder: (context, state) {
             final projectId = state.pathParameters['projectId']!;
-            final projectName = context.read<ModuleBloc>().state.projectName ?? (state.extra as String? ?? 'Modules');
-
             final bloc = context.read<ModuleBloc>();
 
-            if (bloc.state.modules.isEmpty) {
-              bloc.add(GetModulesForProjectEvent(
-                projectId,
-                projectName: projectName,
-              ));
-            }
+            final projectName = bloc.state.maybeMap(
+              success:
+                  (s) => s.projectName ?? (state.extra as String? ?? 'Modules'),
+              orElse: () => state.extra as String? ?? 'Modules',
+            );
+
+            bloc.state.mapOrNull(
+              initial: (_) {
+                bloc.add(
+                  ModuleEvent.getModulesForProject(
+                    projectId: projectId,
+                    projectName: projectName,
+                  ),
+                );
+              },
+            );
 
             return ModuleListPage(
               projectId: projectId,
@@ -115,14 +113,19 @@ final GoRouter router = GoRouter(
 
                 final projectName = state.extra as String? ?? 'Modules';
 
-                final hasSubmodules =
-                    bloc.state.submodules[moduleId]?.isNotEmpty ?? false;
-                final hasPlans =
-                    bloc.state.testPlans[moduleId]?.isNotEmpty ?? false;
+                bloc.state.mapOrNull(
+                  success: (s) {
+                    final hasSubmodules =
+                        s.submodules[moduleId]?.isNotEmpty ?? false;
+                    final hasPlans = s.testPlans[moduleId]?.isNotEmpty ?? false;
 
-                if (!hasSubmodules && !hasPlans) {
-                  bloc.add(GetSubmodulesForModuleEvent(moduleId));
-                }
+                    if (!hasSubmodules && !hasPlans) {
+                      bloc.add(
+                        ModuleEvent.getSubmodulesForModule(moduleId: moduleId),
+                      );
+                    }
+                  },
+                );
 
                 return ModuleListPage(
                   projectId: projectId,
@@ -182,8 +185,8 @@ final GoRouter router = GoRouter(
       builder: (context, state) {
         final caseId = state.pathParameters['caseId']!;
         return BlocProvider(
-          create: (_) => sl<CommentBloc>()
-            ..add(GetCommentsForCaseEvent(caseId)),
+          create:
+              (_) => sl<CommentBloc>()..add(GetCommentsForCaseEvent(caseId)),
           child: CommentPage(testCaseId: caseId),
         );
       },
@@ -197,8 +200,9 @@ final GoRouter router = GoRouter(
       name: 'execution',
       builder: (context, state) {
         return BlocProvider(
-          create: (_) => sl<TestExecutionBloc>()
-            ..add(GetAllProjectsForTestsEvent()),
+          create:
+              (_) =>
+                  sl<TestExecutionBloc>()..add(GetAllProjectsForTestsEvent()),
           child: const ExecutionPage(),
         );
       },

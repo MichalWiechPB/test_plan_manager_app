@@ -46,7 +46,6 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     on<LoadPreviewForModuleEvent>(_onLoadPreviewForModule);
     on<NavigateBackEvent>(_onNavigateBack);
     on<SetVisitedPathEvent>(_onSetVisitedPath);
-
     on<CreateModuleEvent>(_onCreateModule);
     on<UpdateModuleEvent>(_onUpdateModule);
     on<DeleteModuleEvent>(_onDeleteModule);
@@ -55,95 +54,91 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     on<DeleteTestPlanEvent>(_onDeleteTestPlan);
   }
 
-  // ---------------------------------------------------------------------------
-  // 1️⃣ Pobranie głównych modułów projektu
-  // ---------------------------------------------------------------------------
   Future<void> _onGetModulesForProject(
       GetModulesForProjectEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    if (state.currentProjectId != event.projectId) {
-      emit(const ModuleState.initial());
-    }
+    emit(const ModuleState.loading());
 
-    emit(state.copyWith(status: ModuleStatus.loading));
-
-    final result = await getModulesForProject(ProjectIdParams(event.projectId));
-
-    result.fold(
-          (failure) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: failure.message,
-      )),
+    (await getModulesForProject(ProjectIdParams(event.projectId))).fold(
+          (failure) {
+        emit(
+          ModuleState.failure(
+            errorMessage: failure.message ?? 'Wystąpił nieznany błąd',
+          ),
+        );
+      },
           (modules) {
         final visited = getVisitedModules(event.projectId);
 
-        emit(state.copyWith(
-          status: ModuleStatus.success,
-          modules: modules,
-          currentProjectId: event.projectId,
-          visitedModules: visited,
-          projectName: event.projectName, // 🎯 USTAWIAMY projectName
-        ));
+        emit(
+          ModuleState.success(
+            modules: modules,
+            submodules: const {},
+            testPlans: const {},
+            visitedModules: visited,
+            currentProjectId: event.projectId,
+            projectName: event.projectName,
+          ),
+        );
       },
     );
   }
 
-  // ---------------------------------------------------------------------------
-  // 2️⃣ Podgląd dla kafelka
-  // ---------------------------------------------------------------------------
   Future<void> _onLoadPreviewForModule(
       LoadPreviewForModuleEvent event,
       Emitter<ModuleState> emit,
       ) async {
+    final current = state;
+    if (current is! ModuleSuccess) return;
+
     final moduleId = event.moduleId;
 
     final alreadyLoaded =
-        (state.submodules[moduleId]?.isNotEmpty ?? false) ||
-            (state.testPlans[moduleId]?.isNotEmpty ?? false);
+        (current.submodules[moduleId]?.isNotEmpty ?? false) ||
+            (current.testPlans[moduleId]?.isNotEmpty ?? false);
 
     if (alreadyLoaded) return;
 
-    final submodulesResult =
-    await getSubmodulesForModule(ParentModuleIdParams(moduleId));
-
-    final testPlansResult =
-    await getTestPlansForModule(ModuleIdParams(moduleId));
-
     final updatedSubmodules =
-    Map<String, List<ModuleEntity>>.from(state.submodules);
-
+    Map<String, List<ModuleEntity>>.from(current.submodules);
     final updatedTestPlans =
-    Map<String, List<TestPlanEntity>>.from(state.testPlans);
+    Map<String, List<TestPlanEntity>>.from(current.testPlans);
 
-    submodulesResult.fold(
-          (_) => null,
-          (subs) => updatedSubmodules[moduleId] = subs.take(3).toList(),
+    (await getSubmodulesForModule(ParentModuleIdParams(moduleId))).fold(
+          (_) {},
+          (subs) {
+        updatedSubmodules[moduleId] = subs.take(3).toList();
+      },
     );
 
-    testPlansResult.fold(
-          (_) => null,
-          (plans) => updatedTestPlans[moduleId] = plans.take(3).toList(),
+    (await getTestPlansForModule(ModuleIdParams(moduleId))).fold(
+          (_) {},
+          (plans) {
+        updatedTestPlans[moduleId] = plans.take(3).toList();
+      },
     );
 
-    emit(state.copyWith(
-      submodules: updatedSubmodules,
-      testPlans: updatedTestPlans,
-    ));
+    emit(
+      current.copyWith(
+        submodules: updatedSubmodules,
+        testPlans: updatedTestPlans,
+      ),
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // 3️⃣ Pobranie submodułów
-  // ---------------------------------------------------------------------------
   Future<void> _onGetSubmodulesForModule(
       GetSubmodulesForModuleEvent event,
       Emitter<ModuleState> emit,
       ) async {
+    final current = state;
+    if (current is! ModuleSuccess) return;
+
     final moduleId = event.moduleId;
-    final projectId = state.currentProjectId;
+    final projectId = current.currentProjectId;
     if (projectId == null) return;
 
-    final alreadyCached = state.submodules.containsKey(moduleId);
+    final alreadyCached = current.submodules.containsKey(moduleId);
 
     if (alreadyCached) {
       final visited = getVisitedModules(projectId);
@@ -151,213 +146,295 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
       if (!visited.contains(moduleId)) {
         final updatedVisited = [...visited, moduleId];
         saveVisitedModules(projectId, updatedVisited);
-        emit(state.copyWith(visitedModules: updatedVisited));
+        emit(current.copyWith(visitedModules: updatedVisited));
       } else {
-        emit(state.copyWith(visitedModules: visited));
+        emit(current.copyWith(visitedModules: visited));
       }
 
       return;
     }
 
-    emit(state.copyWith(status: ModuleStatus.loading));
+    final previousSubmodules =
+    Map<String, List<ModuleEntity>>.from(current.submodules);
+    final previousTestPlans =
+    Map<String, List<TestPlanEntity>>.from(current.testPlans);
 
-    final submodulesResult =
-    await getSubmodulesForModule(ParentModuleIdParams(moduleId));
-    final testPlansResult =
-    await getTestPlansForModule(ModuleIdParams(moduleId));
+    emit(const ModuleState.loading());
 
-    final updatedSubmodules =
-    Map<String, List<ModuleEntity>>.from(state.submodules);
-
-    final updatedTestPlans =
-    Map<String, List<TestPlanEntity>>.from(state.testPlans);
-
-    submodulesResult.fold(
-          (failure) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: failure.message,
-      )),
-          (modules) => updatedSubmodules[moduleId] = modules,
+    final updatedSubmodules = Map<String, List<ModuleEntity>>.from(
+      previousSubmodules,
+    );
+    final updatedTestPlans = Map<String, List<TestPlanEntity>>.from(
+      previousTestPlans,
     );
 
-    testPlansResult.fold(
-          (failure) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: failure.message,
-      )),
-          (plans) => updatedTestPlans[moduleId] = plans,
+    String? errorMessage;
+
+    (await getSubmodulesForModule(ParentModuleIdParams(moduleId))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (modules) {
+        updatedSubmodules[moduleId] = modules;
+      },
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    (await getTestPlansForModule(ModuleIdParams(moduleId))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (plans) {
+        updatedTestPlans[moduleId] = plans;
+      },
+    );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
 
     final currentVisited = getVisitedModules(projectId);
     final updatedVisited = [...currentVisited, moduleId];
     saveVisitedModules(projectId, updatedVisited);
 
-    emit(state.copyWith(
-      status: ModuleStatus.success,
-      submodules: updatedSubmodules,
-      testPlans: updatedTestPlans,
-      visitedModules: updatedVisited,
-    ));
+    emit(
+      ModuleState.success(
+        modules: current.modules,
+        submodules: updatedSubmodules,
+        testPlans: updatedTestPlans,
+        visitedModules: updatedVisited,
+        currentProjectId: projectId,
+        projectName: current.projectName,
+      ),
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // 4️⃣ Powrót w hierarchii modułów
-  // ---------------------------------------------------------------------------
   Future<void> _onNavigateBack(
       NavigateBackEvent event,
       Emitter<ModuleState> emit,
       ) async {
+    final current = state;
+    if (current is! ModuleSuccess) return;
+
     final visited = getVisitedModules(event.projectId);
 
     if (visited.isNotEmpty) {
-      final shortened = List<String>.from(visited)..removeLast();
+      final shortened = [...visited]..removeLast();
       saveVisitedModules(event.projectId, shortened);
-      emit(state.copyWith(visitedModules: shortened));
-    } else {
-      saveVisitedModules(event.projectId, []);
-      emit(state.copyWith(visitedModules: []));
+
+      emit(
+        current.copyWith(visitedModules: shortened),
+      );
+      return;
     }
+
+    saveVisitedModules(event.projectId, []);
+
+    emit(
+      current.copyWith(visitedModules: const []),
+    );
   }
 
-  // ---------------------------------------------------------------------------
-  // 5️⃣ Ręczne ustawienie ścieżki
-  // ---------------------------------------------------------------------------
   Future<void> _onSetVisitedPath(
       SetVisitedPathEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    saveVisitedModules(event.projectId, List<String>.from(event.visited));
-    emit(state.copyWith(visitedModules: List<String>.from(event.visited)));
-  }
+    saveVisitedModules(event.projectId, [...event.visited]);
 
-  // ---------------------------------------------------------------------------
-  // HELPER: odśwież moduły po zmianach
-  // ---------------------------------------------------------------------------
-  Future<void> _refreshAfterChange(
-      Emitter<ModuleState> emit, {
-        String? moduleId,
-      }) async {
-    final projectId = state.currentProjectId;
-    if (projectId == null) return;
-
-    if (moduleId == null) {
-      add(GetModulesForProjectEvent(projectId));
-    } else {
-      add(GetSubmodulesForModuleEvent(moduleId));
+    final current = state;
+    if (current is ModuleSuccess) {
+      emit(
+        current.copyWith(visitedModules: [...event.visited]),
+      );
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // CREATE/UPDATE/DELETE MODULE
-  // ---------------------------------------------------------------------------
+  Future<void> _refresh({String? moduleId}) async {
+    final current = state;
+    if (current is! ModuleSuccess) return;
+
+    final projectId = current.currentProjectId;
+    if (projectId == null) return;
+
+    if (moduleId == null) {
+      add(
+        ModuleEvent.getModulesForProject(
+          projectId: projectId,
+          projectName: current.projectName,
+        ),
+      );
+    } else {
+      add(
+        ModuleEvent.getSubmodulesForModule(moduleId: moduleId),
+      );
+    }
+  }
 
   Future<void> _onCreateModule(
-      CreateModuleEvent e,
+      CreateModuleEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await createModule(CreateModuleParams(e.module));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(emit, moduleId: e.module.parentModuleId),
+    (await createModule(CreateModuleParams(event.module))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    await _refresh(moduleId: event.module.parentModuleId);
   }
 
   Future<void> _onUpdateModule(
-      UpdateModuleEvent e,
+      UpdateModuleEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await updateModule(UpdateModuleParams(e.module));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(emit, moduleId: e.module.parentModuleId),
+    (await updateModule(UpdateModuleParams(event.module))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    await _refresh(moduleId: event.module.parentModuleId);
   }
 
   Future<void> _onDeleteModule(
-      DeleteModuleEvent e,
+      DeleteModuleEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await deleteModule(DeleteModuleParams(e.moduleId));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(emit, moduleId: e.moduleId),
+    (await deleteModule(DeleteModuleParams(event.moduleId))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    await _refresh(moduleId: event.moduleId);
   }
 
-  // ---------------------------------------------------------------------------
-  // CREATE/UPDATE/DELETE TEST PLAN
-  // ---------------------------------------------------------------------------
-
   Future<void> _onCreateTestPlan(
-      CreateTestPlanEvent e,
+      CreateTestPlanEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await createTestPlan(CreateTestPlanParams(e.plan));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(emit, moduleId: e.plan.moduleId),
+    (await createTestPlan(CreateTestPlanParams(event.plan))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    await _refresh(moduleId: event.plan.moduleId);
   }
 
   Future<void> _onUpdateTestPlan(
-      UpdateTestPlanEvent e,
+      UpdateTestPlanEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await updateTestPlan(UpdateTestPlanParams(e.plan));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(emit, moduleId: e.plan.moduleId),
+    (await updateTestPlan(UpdateTestPlanParams(event.plan))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    await _refresh(moduleId: event.plan.moduleId);
   }
 
   Future<void> _onDeleteTestPlan(
-      DeleteTestPlanEvent e,
+      DeleteTestPlanEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(state.copyWith(status: ModuleStatus.loading));
+    emit(const ModuleState.loading());
 
-    final res = await deleteTestPlan(DeleteTestPlanParams(e.testPlanId));
+    String? errorMessage;
 
-    res.fold(
-          (f) => emit(state.copyWith(
-        status: ModuleStatus.failure,
-        errorMessage: f.message,
-      )),
-          (_) => _refreshAfterChange(
-        emit,
-        moduleId:
-        state.visitedModules.isNotEmpty ? state.visitedModules.last : null,
-      ),
+    (await deleteTestPlan(DeleteTestPlanParams(event.testPlanId))).fold(
+          (failure) {
+        errorMessage = failure.message ?? 'Wystąpił nieznany błąd';
+      },
+          (_) {},
     );
+
+    if (errorMessage != null) {
+      emit(
+        ModuleState.failure(errorMessage: errorMessage!),
+      );
+      return;
+    }
+
+    final current = state;
+    if (current is! ModuleSuccess) {
+      await _refresh();
+      return;
+    }
+
+    final lastModuleId =
+    current.visitedModules.isNotEmpty ? current.visitedModules.last : null;
+
+    await _refresh(moduleId: lastModuleId);
   }
 }

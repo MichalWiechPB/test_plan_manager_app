@@ -1,71 +1,25 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
-enum ModuleStatus { initial, loading, success, failure }
+part 'module_state.freezed.dart';
 
-class ModuleState extends Equatable {
-  final ModuleStatus status;
-  final List<ModuleEntity> modules;
-  final Map<String, List<ModuleEntity>> submodules;
-  final Map<String, List<TestPlanEntity>> testPlans;
-  final List<String> visitedModules;
-  final String? currentProjectId;
-  final String? errorMessage;
-  final String? projectName;
+@freezed
+sealed class ModuleState with _$ModuleState {
+  const factory ModuleState.initial() = ModuleInitial;
 
-  const ModuleState({
-    required this.status,
-    required this.modules,
-    required this.submodules,
-    required this.testPlans,
-    required this.visitedModules,
-    this.currentProjectId,
-    this.errorMessage,
-    this.projectName,
-  });
+  const factory ModuleState.loading() = ModuleLoading;
 
-  const ModuleState.initial()
-      : status = ModuleStatus.initial,
-        modules = const [],
-        submodules = const {},
-        testPlans = const {},
-        visitedModules = const [],
-        currentProjectId = null,
-        errorMessage = null,
-        projectName = null;
-
-  ModuleState copyWith({
-    ModuleStatus? status,
-    List<ModuleEntity>? modules,
-    Map<String, List<ModuleEntity>>? submodules,
-    Map<String, List<TestPlanEntity>>? testPlans,
-    List<String>? visitedModules,
+  const factory ModuleState.success({
+    required List<ModuleEntity> modules,
+    required Map<String, List<ModuleEntity>> submodules,
+    required Map<String, List<TestPlanEntity>> testPlans,
+    required List<String> visitedModules,
     String? currentProjectId,
-    String? errorMessage,
     String? projectName,
-  }) {
-    return ModuleState(
-      status: status ?? this.status,
-      modules: modules ?? this.modules,
-      submodules: submodules ?? this.submodules,
-      testPlans: testPlans ?? this.testPlans,
-      visitedModules: visitedModules ?? this.visitedModules,
-      currentProjectId: currentProjectId ?? this.currentProjectId,
-      errorMessage: errorMessage ?? this.errorMessage,
-      projectName: projectName ?? this.projectName,
-    );
-  }
+  }) = ModuleSuccess;
 
-  @override
-  List<Object?> get props => [
-    status,
-    modules,
-    submodules,
-    testPlans,
-    visitedModules,
-    currentProjectId,
-    errorMessage,
-    projectName,
-  ];
+  const factory ModuleState.failure({
+    required String errorMessage,
+  }) = ModuleFailure;
 }

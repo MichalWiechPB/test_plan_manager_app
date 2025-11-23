@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 
-import '../../../features/test_case_list/domain/repository/test_case_repository.dart';
+import '../../../features/test_step_list/domain/repository/test_case_repository.dart';
 import '../../../features/test_plan_list/domain/repositories/test_plan_repository.dart';
 import '../../error/failures.dart';
 

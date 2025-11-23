@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import '../data.dart';
+import '../drift_database/data.dart';
 
 part 'test_steps_dao.g.dart';
 

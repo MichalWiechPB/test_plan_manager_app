@@ -10,7 +10,7 @@ class TestPlanTile extends StatelessWidget {
   final TestPlanEntity plan;
   final String projectId;
   final String moduleId;
-  final String? projectName; // opcjonalne – dla zachowania tytułu w trasie
+  final String? projectName;
 
   const TestPlanTile({
     super.key,
@@ -48,7 +48,6 @@ class TestPlanTile extends StatelessWidget {
     );
   }
 
-  // 🔹 Edycja planu
   void _openEditDialog(BuildContext context) {
     final nameCtrl = TextEditingController(text: plan.name);
     final descCtrl = TextEditingController(text: plan.description ?? '');
@@ -64,6 +63,7 @@ class TestPlanTile extends StatelessWidget {
               controller: nameCtrl,
               decoration: const InputDecoration(labelText: 'Nazwa'),
             ),
+            const SizedBox(height: 16.0),
             TextField(
               controller: descCtrl,
               decoration: const InputDecoration(labelText: 'Opis'),
@@ -79,7 +79,6 @@ class TestPlanTile extends StatelessWidget {
             onPressed: () {
               final name = nameCtrl.text.trim();
               final desc = descCtrl.text.trim();
-
               if (name.isEmpty) return;
 
               final updated = TestPlanEntity(
@@ -89,7 +88,10 @@ class TestPlanTile extends StatelessWidget {
                 moduleId: plan.moduleId,
               );
 
-              context.read<ModuleBloc>().add(UpdateTestPlanEvent(updated));
+              context.read<ModuleBloc>().add(
+                ModuleEvent.updateTestPlan(plan: updated),
+              );
+
               Navigator.pop(ctx);
             },
             child: const Text('Zapisz'),
@@ -99,13 +101,12 @@ class TestPlanTile extends StatelessWidget {
     );
   }
 
-  // 🔹 Usuwanie planu
   void _confirmDelete(BuildContext context) {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Usuń plan testów'),
-        content: Text('Czy na pewno chcesz usunąć "${plan.name}"?'),
+        content: Text('Czy na pewno chcesz usunąć „${plan.name}”?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -113,7 +114,9 @@ class TestPlanTile extends StatelessWidget {
           ),
           ElevatedButton(
             onPressed: () {
-              context.read<ModuleBloc>().add(DeleteTestPlanEvent(plan.id));
+              context.read<ModuleBloc>().add(
+                ModuleEvent.deleteTestPlan(testPlanId: plan.id),
+              );
               Navigator.pop(ctx);
             },
             child: const Text('Usuń'),

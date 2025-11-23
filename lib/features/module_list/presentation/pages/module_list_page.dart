@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
 import '../bloc/module_bloc.dart';
 import '../bloc/module_state.dart';
 import '../bloc/module_event.dart';
@@ -32,127 +31,201 @@ class _ModuleListPageState extends State<ModuleListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(context.watch<ModuleBloc>().state.projectName ?? widget.projectName),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          tooltip: 'Back',
-          onPressed: () {
-            final bloc = context.read<ModuleBloc>();
-            final current = List<String>.from(bloc.state.visitedModules);
-
-            if (current.isEmpty) {
-              bloc.add(SetVisitedPathEvent(widget.projectId, const []));
-              context.go('/projects');
-              return;
-            }
-
-            if (current.length == 1) {
-              bloc.add(SetVisitedPathEvent(widget.projectId, const []));
-              context.go('/projects');
-              return;
-            }
-
-            current.removeLast();
-            bloc.add(SetVisitedPathEvent(widget.projectId, current));
-
-            final parentId = current.last;
-            context.go('/modules/${widget.projectId}/sub/$parentId',
-                extra: widget.projectName);
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text(
+            context.watch<ModuleBloc>().state.maybeWhen(
+              success: (_, __, ___, ____, _____, projectName) =>
+              projectName ?? widget.projectName,
+              orElse: () => widget.projectName,
+            ),
+          ),
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => _onBackPressed(context),
+          ),
+        ),
+        floatingActionButton: _buildFab(context),
+        body: BlocBuilder<ModuleBloc, ModuleState>(
+          builder: (context, state) {
+            return state.when(
+              initial: _renderLoading,
+              loading: _renderLoading,
+              failure: _renderFailure,
+              success: (modules, sub, plans, visited, currentProjectId, name) {
+                return _renderSuccess(
+                  context: context,
+                  modules: widget.moduleId == null
+                      ? modules
+                      : (sub[widget.moduleId] ?? const []),
+                  testPlans: widget.moduleId != null
+                      ? (plans[widget.moduleId] ?? const [])
+                      : const [],
+                );
+              },
+            );
           },
         ),
-      ),
-      body: BlocBuilder<ModuleBloc, ModuleState>(
-        builder: (context, state) {
-          final modules = widget.moduleId == null
-              ? state.modules
-              : (state.submodules[widget.moduleId] ?? []);
-
-          final testPlans = widget.moduleId != null
-              ? (state.testPlans[widget.moduleId] ?? [])
-              : const <TestPlanEntity>[];
-
-          if (state.status == ModuleStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final filteredModules = modules
-              .where((m) => m.name.toLowerCase().contains(searchQuery.toLowerCase()))
-              .toList();
-
-          final filteredPlans = testPlans
-              .where((p) => p.name.toLowerCase().contains(searchQuery.toLowerCase()))
-              .toList();
-
-          final combinedEmpty =
-              filteredModules.isEmpty && filteredPlans.isEmpty;
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              buildPathBar(context, state, widget.projectId),
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-                child: TextField(
-                  decoration: const InputDecoration(
-                    labelText: 'Szukaj modułu lub planu testów',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (value) {
-                    setState(() => searchQuery = value);
-                  },
-                ),
-              ),
-
-              const Divider(height: 1),
-
-              Expanded(
-                child: combinedEmpty
-                    ? const Center(child: Text('Brak wyników'))
-                    : ListView(
-                  children: [
-                    ...filteredModules.map((m) => ModuleTile(module: m)),
-                    ...filteredPlans.map(
-                          (p) => TestPlanTile(
-                        plan: p,
-                        projectId: widget.projectId,
-                        moduleId: widget.moduleId ?? '',
-                        projectName: widget.projectName,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-
-      floatingActionButton: PopupMenuButton<String>(
-        offset: const Offset(0, -56),
-        icon: const Icon(Icons.add),
-        onSelected: (value) {
-          if (value == 'add_module') {
-            _openCreateModuleDialog(context,
-                projectId: widget.projectId, parentModuleId: widget.moduleId);
-          } else if (value == 'add_plan' && widget.moduleId != null) {
-            _openCreateTestPlanDialog(context, moduleId: widget.moduleId!);
-          }
-        },
-        itemBuilder: (context) => [
-          const PopupMenuItem(value: 'add_module', child: Text('Dodaj moduł')),
-          if (widget.moduleId != null)
-            const PopupMenuItem(value: 'add_plan', child: Text('Dodaj plan testów')),
-        ],
       ),
     );
   }
 
-  void _openCreateModuleDialog(BuildContext context,
-      {required String projectId, String? parentModuleId}) {
+  Widget _renderLoading() {
+    return const Center(child: CircularProgressIndicator());
+  }
+
+  Widget _renderFailure(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, size: 48.0, color: Colors.red),
+            const SizedBox(height: 16.0),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 16.0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24.0),
+            ElevatedButton(
+              onPressed: () {
+                context.read<ModuleBloc>().add(
+                  ModuleEvent.getModulesForProject(
+                    projectId: widget.projectId,
+                    projectName: widget.projectName,
+                  ),
+                );
+              },
+              child: const Text('Spróbuj ponownie'),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _renderSuccess({
+    required BuildContext context,
+    required List<ModuleEntity> modules,
+    required List<TestPlanEntity> testPlans,
+  }) {
+    final filteredModules = modules
+        .where((m) => m.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    final filteredPlans = testPlans
+        .where((p) => p.name.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    final empty = filteredModules.isEmpty && filteredPlans.isEmpty;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        buildPathBar(context, context.read<ModuleBloc>().state, widget.projectId),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
+          child: TextField(
+            decoration: const InputDecoration(
+              labelText: 'Szukaj modułu lub planu testów',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (value) {
+              setState(() => searchQuery = value);
+            },
+          ),
+        ),
+        const Divider(height: 1.0),
+        Expanded(
+          child: empty
+              ? const Center(
+            child: Text('Brak wyników'),
+          )
+              : ListView(
+            children: [
+              ...filteredModules.map((m) => ModuleTile(module: m)),
+              ...filteredPlans.map(
+                    (p) => TestPlanTile(
+                  plan: p,
+                  projectId: widget.projectId,
+                  moduleId: widget.moduleId ?? '',
+                  projectName: widget.projectName,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _onBackPressed(BuildContext context) {
+    final bloc = context.read<ModuleBloc>();
+    final visited = List<String>.from(
+      bloc.state.maybeWhen(
+        success: (_, __, ___, visitedModules, ____, _____) => visitedModules,
+        orElse: () => const [],
+      ),
+    );
+
+    if (visited.isEmpty || visited.length == 1) {
+      bloc.add(
+        ModuleEvent.setVisitedPath(
+          projectId: widget.projectId,
+          visited: const [],
+        ),
+      );
+      context.go('/projects');
+      return;
+    }
+
+    visited.removeLast();
+
+    bloc.add(
+      ModuleEvent.setVisitedPath(
+        projectId: widget.projectId,
+        visited: visited,
+      ),
+    );
+
+    final parentId = visited.last;
+
+    context.go(
+      '/modules/${widget.projectId}/sub/$parentId',
+      extra: widget.projectName,
+    );
+  }
+
+  Widget _buildFab(BuildContext context) {
+    return PopupMenuButton<String>(
+      offset: const Offset(0.0, -56.0),
+      icon: const Icon(Icons.add),
+      onSelected: (value) {
+        if (value == 'add_module') {
+          _openCreateModuleDialog(context);
+        } else if (value == 'add_plan' && widget.moduleId != null) {
+          _openCreatePlanDialog(context);
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: 'add_module',
+          child: Text('Dodaj moduł'),
+        ),
+        if (widget.moduleId != null)
+          const PopupMenuItem(
+            value: 'add_plan',
+            child: Text('Dodaj plan testów'),
+          ),
+      ],
+    );
+  }
+
+  void _openCreateModuleDialog(BuildContext context) {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
@@ -167,6 +240,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
               controller: nameCtrl,
               decoration: const InputDecoration(labelText: 'Nazwa'),
             ),
+            const SizedBox(height: 16.0),
             TextField(
               controller: descCtrl,
               decoration: const InputDecoration(labelText: 'Opis'),
@@ -174,7 +248,10 @@ class _ModuleListPageState extends State<ModuleListPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Anuluj')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
           ElevatedButton(
             onPressed: () {
               final name = nameCtrl.text.trim();
@@ -185,10 +262,13 @@ class _ModuleListPageState extends State<ModuleListPage> {
                 id: 'module_${DateTime.now().millisecondsSinceEpoch}',
                 name: name,
                 description: desc.isEmpty ? null : desc,
-                projectId: projectId,
-                parentModuleId: parentModuleId,
+                projectId: widget.projectId,
+                parentModuleId: widget.moduleId,
               );
-              context.read<ModuleBloc>().add(CreateModuleEvent(module));
+
+              context.read<ModuleBloc>().add(
+                ModuleEvent.createModule(module: module),
+              );
               Navigator.pop(ctx);
             },
             child: const Text('Dodaj'),
@@ -198,7 +278,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
     );
   }
 
-  void _openCreateTestPlanDialog(BuildContext context, {required String moduleId}) {
+  void _openCreatePlanDialog(BuildContext context) {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
@@ -213,6 +293,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
               controller: nameCtrl,
               decoration: const InputDecoration(labelText: 'Nazwa'),
             ),
+            const SizedBox(height: 16.0),
             TextField(
               controller: descCtrl,
               decoration: const InputDecoration(labelText: 'Opis'),
@@ -220,7 +301,10 @@ class _ModuleListPageState extends State<ModuleListPage> {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Anuluj')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Anuluj'),
+          ),
           ElevatedButton(
             onPressed: () {
               final name = nameCtrl.text.trim();
@@ -231,9 +315,13 @@ class _ModuleListPageState extends State<ModuleListPage> {
                 id: 'plan_${DateTime.now().millisecondsSinceEpoch}',
                 name: name,
                 description: desc.isEmpty ? null : desc,
-                moduleId: moduleId,
+                moduleId: widget.moduleId ?? '',
               );
-              context.read<ModuleBloc>().add(CreateTestPlanEvent(plan));
+
+              context.read<ModuleBloc>().add(
+                ModuleEvent.createTestPlan(plan: plan),
+              );
+
               Navigator.pop(ctx);
             },
             child: const Text('Dodaj'),

@@ -13,7 +13,7 @@ import '../core/global/navigation/domain/usecases/save_visited_modules.dart';
 // 🧩 DATABASE
 import '../core/global/pkce_service/pkce_service.dart';
 import '../core/usecases/impl/recalculate_testcase_progress.dart';
-import '../database/data.dart';
+import '../database/drift_database/data.dart';
 import '../database/daos/comments_dao.dart';
 import '../database/daos/module_dao.dart';
 import '../database/daos/project_dao.dart';
@@ -67,14 +67,14 @@ import '../features/test_plan_list/domain/usecases/delete_test_case.dart';
 import '../features/test_plan_list/presentation/bloc/test_plan_bloc.dart';
 
 // TEST CASES / STEPS
-import '../features/test_case_list/data/repository/test_case_repository_impl.dart';
-import '../features/test_case_list/domain/repository/test_case_repository.dart';
-import '../features/test_case_list/domain/usecases/get_teststeps_for_case.dart';
-import '../features/test_case_list/domain/usecases/create_test_step.dart';
-import '../features/test_case_list/domain/usecases/update_test_step.dart';
-import '../features/test_case_list/domain/usecases/delete_test_step.dart';
-import '../features/test_case_list/domain/usecases/update_test_step_order.dart';
-import '../features/test_case_list/presentation/bloc/test_case_bloc.dart';
+import '../features/test_step_list/data/repository/test_case_repository_impl.dart';
+import '../features/test_step_list/domain/repository/test_case_repository.dart';
+import '../features/test_step_list/domain/usecases/get_teststeps_for_case.dart';
+import '../features/test_step_list/domain/usecases/create_test_step.dart';
+import '../features/test_step_list/domain/usecases/update_test_step.dart';
+import '../features/test_step_list/domain/usecases/delete_test_step.dart';
+import '../features/test_step_list/domain/usecases/update_test_step_order.dart';
+import '../features/test_step_list/presentation/bloc/test_step_bloc.dart';
 
 // COMMENTS
 import '../features/comments/data/repository/comment_repository_impl.dart';

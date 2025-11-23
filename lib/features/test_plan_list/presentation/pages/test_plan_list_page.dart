@@ -33,7 +33,7 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
   Widget build(BuildContext context) {
     return BlocProvider<TestPlanBloc>(
       create: (_) =>
-      di.sl<TestPlanBloc>()..add(GetTestCasesForPlanEvent(widget.planId)),
+      di.sl<TestPlanBloc>()..add(TestPlanEvent.getTestCasesForPlan(planId: widget.planId)),
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Test Cases'),
@@ -51,182 +51,207 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
         ),
         body: BlocBuilder<TestPlanBloc, TestPlanState>(
           builder: (context, state) {
-            if (state.status == TestPlanStatus.loading ||
-                state.status == TestPlanStatus.initial) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (state.status == TestPlanStatus.failure) {
-              return Center(
-                child: Text(state.errorMessage ?? 'Błąd ładowania test case\'ów'),
-              );
-            }
-
-            final allCases = state.testCases;
-
-            List<TestCaseEntity> filtered = allCases
-                .where((c) =>
-                c.title.toLowerCase().contains(searchQuery.toLowerCase()))
-                .toList();
-
-            if (sortMode == TestCaseSortMode.newest) {
-              filtered.sort((a, b) =>
-                  (b.lastModifiedUtc ?? DateTime(0))
-                      .compareTo(a.lastModifiedUtc ?? DateTime(0)));
-            } else if (sortMode == TestCaseSortMode.oldest) {
-              filtered.sort((a, b) =>
-                  (a.lastModifiedUtc ?? DateTime(0))
-                      .compareTo(b.lastModifiedUtc ?? DateTime(0)));
-            }
-
-            final total = allCases.length;
-            final passed = allCases.where((c) => c.status == 'Passed').length;
-            final failed = allCases.where((c) => c.status == 'Failed').length;
-            final blocked = allCases.where((c) => c.status == 'Blocked').length;
-            final notRun = allCases
-                .where((c) => c.status == 'NotRun' || c.status == 'Pending')
-                .length;
-            final progress = total > 0 ? passed / total : 0.0;
-
-            return RefreshIndicator(
-              onRefresh: () async => context
-                  .read<TestPlanBloc>()
-                  .add(GetTestCasesForPlanEvent(widget.planId)),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
-                    child: Row(
-                      children: [
-                        // 🔍 SEARCH FIELD (flex = 3)
-                        Expanded(
-                          flex: 3,
-                          child: TextField(
-                            decoration: const InputDecoration(
-                              labelText: "Szukaj",
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(),
-                              contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                            ),
-                            onChanged: (value) {
-                              setState(() => searchQuery = value);
-                            },
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // 🔽 SORT DROPDOWN (flex = 2)
-                        Expanded(
-                          flex: 2,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey.shade400),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: DropdownButton<TestCaseSortMode>(
-                              value: sortMode,
-                              underline: const SizedBox(),
-                              isExpanded: true,
-                              items: const [
-                                DropdownMenuItem(
-                                  value: TestCaseSortMode.none,
-                                  child: Text("Brak"),
-                                ),
-                                DropdownMenuItem(
-                                  value: TestCaseSortMode.newest,
-                                  child: Text("Najnowsze"),
-                                ),
-                                DropdownMenuItem(
-                                  value: TestCaseSortMode.oldest,
-                                  child: Text("Najstarsze"),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                setState(() => sortMode = value!);
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Postęp testów',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            LinearProgressIndicator(
-                              value: progress,
-                              minHeight: 8,
-                              borderRadius: BorderRadius.circular(8),
-                              color: Colors.green,
-                              backgroundColor: Colors.grey.shade300,
-                            ),
-                            const SizedBox(height: 8),
-                            Wrap(
-                              spacing: 12,
-                              runSpacing: 4,
-                              children: [
-                                Text('✅ Passed: $passed',
-                                    style: const TextStyle(color: Colors.green, fontSize: 13)),
-                                Text('❌ Failed: $failed',
-                                    style: const TextStyle(color: Colors.red, fontSize: 13)),
-                                Text('⛔ Blocked: $blocked',
-                                    style: const TextStyle(color: Colors.orange, fontSize: 13)),
-                                Text('⚪ NotRun: $notRun',
-                                    style: const TextStyle(color: Colors.grey, fontSize: 13)),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Razem: $passed / $total ukończonych',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 14,
-                              ),
-                            )
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  Expanded(
-                    child: filtered.isEmpty
-                        ? const Center(child: Text("Brak wyników"))
-                        : ListView.builder(
-                      itemCount: filtered.length,
-                      itemBuilder: (context, index) {
-                        final testCase = filtered[index];
-                        return TestCaseTile(
-                          testCase: testCase,
-                          projectId: widget.projectId,
-                          moduleId: widget.moduleId,
-                          planId: widget.planId,
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+            return state.when(
+              initial: () => _buildLoading(),
+              loading: () => _buildLoading(),
+              failure: (errorMessage) => _buildFailure(errorMessage),
+              success: (testCases) => _buildSuccess(context, testCases),
             );
           },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildFailure(String message) {
+    return Center(
+      child: Text(message, style: const TextStyle(fontSize: 16.0)),
+    );
+  }
+
+  Widget _buildSuccess(BuildContext context, List<TestCaseEntity> allCases) {
+    List<TestCaseEntity> filtered = allCases
+        .where((c) => c.title.toLowerCase().contains(searchQuery.toLowerCase()))
+        .toList();
+
+    if (sortMode == TestCaseSortMode.newest) {
+      filtered.sort((a, b) =>
+          (b.lastModifiedUtc ?? DateTime(0)).compareTo(a.lastModifiedUtc ?? DateTime(0)));
+    } else if (sortMode == TestCaseSortMode.oldest) {
+      filtered.sort((a, b) =>
+          (a.lastModifiedUtc ?? DateTime(0)).compareTo(b.lastModifiedUtc ?? DateTime(0)));
+    }
+
+    final total = allCases.length;
+    final passed = allCases.where((c) => c.status == 'Passed').length;
+    final failed = allCases.where((c) => c.status == 'Failed').length;
+    final blocked = allCases.where((c) => c.status == 'Blocked').length;
+    final notRun = allCases
+        .where((c) => c.status == 'NotRun' || c.status == 'Pending')
+        .length;
+
+    final progress = total > 0 ? passed / total : 0.0;
+
+    return RefreshIndicator(
+      onRefresh: () async => context
+          .read<TestPlanBloc>()
+          .add(TestPlanEvent.getTestCasesForPlan(planId: widget.planId)),
+      child: Column(
+        children: [
+          _buildSearchAndSort(),
+          _buildProgressCard(
+            passed: passed,
+            failed: failed,
+            blocked: blocked,
+            notRun: notRun,
+            total: total,
+            progress: progress,
+          ),
+          Expanded(
+            child: filtered.isEmpty
+                ? const Center(child: Text("Brak wyników"))
+                : ListView.builder(
+              itemCount: filtered.length,
+              itemBuilder: (context, index) {
+                final testCase = filtered[index];
+                return TestCaseTile(
+                  testCase: testCase,
+                  projectId: widget.projectId,
+                  moduleId: widget.moduleId,
+                  planId: widget.planId,
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchAndSort() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 10.0),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: TextField(
+              decoration: const InputDecoration(
+                labelText: "Szukaj",
+                prefixIcon: Icon(Icons.search),
+                border: OutlineInputBorder(),
+                contentPadding:
+                EdgeInsets.symmetric(vertical: 0.0, horizontal: 12.0),
+              ),
+              onChanged: (value) {
+                setState(() => searchQuery = value);
+              },
+            ),
+          ),
+          const SizedBox(width: 12.0),
+          Expanded(
+            flex: 2,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade400),
+                borderRadius: BorderRadius.circular(8.0),
+              ),
+              child: DropdownButton<TestCaseSortMode>(
+                value: sortMode,
+                underline: const SizedBox(),
+                isExpanded: true,
+                items: const [
+                  DropdownMenuItem(
+                    value: TestCaseSortMode.none,
+                    child: Text("Brak"),
+                  ),
+                  DropdownMenuItem(
+                    value: TestCaseSortMode.newest,
+                    child: Text("Najnowsze"),
+                  ),
+                  DropdownMenuItem(
+                    value: TestCaseSortMode.oldest,
+                    child: Text("Najstarsze"),
+                  ),
+                ],
+                onChanged: (value) {
+                  setState(() => sortMode = value!);
+                },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgressCard({
+    required int passed,
+    required int failed,
+    required int blocked,
+    required int notRun,
+    required int total,
+    required double progress,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 12.0),
+      child: Card(
+        elevation: 2.0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12.0),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Postęp testów',
+                style: TextStyle(
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8.0),
+              LinearProgressIndicator(
+                value: progress,
+                minHeight: 8.0,
+                borderRadius: BorderRadius.circular(8.0),
+                color: Colors.green,
+                backgroundColor: Colors.grey.shade300,
+              ),
+              const SizedBox(height: 8.0),
+              Wrap(
+                spacing: 12.0,
+                runSpacing: 4.0,
+                children: [
+                  Text('Passed: $passed',
+                      style: const TextStyle(color: Colors.green, fontSize: 13.0)),
+                  Text('Failed: $failed',
+                      style: const TextStyle(color: Colors.red, fontSize: 13.0)),
+                  Text('Blocked: $blocked',
+                      style: const TextStyle(color: Colors.orange, fontSize: 13.0)),
+                  Text('NotRun: $notRun',
+                      style: const TextStyle(color: Colors.grey, fontSize: 13.0)),
+                ],
+              ),
+              const SizedBox(height: 4.0),
+              Text(
+                'Razem: $passed / $total ukończonych',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14.0,
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );
@@ -247,7 +272,7 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
               controller: titleCtrl,
               decoration: const InputDecoration(labelText: 'Tytuł'),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 8.0),
             TextField(
               controller: expectedCtrl,
               decoration: const InputDecoration(labelText: 'Oczekiwany wynik'),
@@ -276,7 +301,9 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
                 parentCaseId: null,
               );
 
-              context.read<TestPlanBloc>().add(CreateTestCaseEvent(newCase));
+              context.read<TestPlanBloc>().add(
+                TestPlanEvent.createTestCase(testCase: newCase),
+              );
               Navigator.pop(ctx);
             },
             child: const Text('Zapisz'),

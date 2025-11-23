@@ -1,41 +1,23 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/test_case.dart';
 
-abstract class TestPlanEvent extends Equatable {
-  const TestPlanEvent();
+part 'test_plan_event.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
+@freezed
+sealed class TestPlanEvent with _$TestPlanEvent {
+  const factory TestPlanEvent.getTestCasesForPlan({
+    required String planId,
+  }) = GetTestCasesForPlanEvent;
 
-class GetTestCasesForPlanEvent extends TestPlanEvent {
-  final String planId;
-  const GetTestCasesForPlanEvent(this.planId);
+  const factory TestPlanEvent.createTestCase({
+    required TestCaseEntity testCase,
+  }) = CreateTestCaseEvent;
 
-  @override
-  List<Object?> get props => [planId];
-}
+  const factory TestPlanEvent.updateTestCase({
+    required TestCaseEntity testCase,
+  }) = UpdateTestCaseEvent;
 
-class CreateTestCaseEvent extends TestPlanEvent {
-  final TestCaseEntity testCase;
-  const CreateTestCaseEvent(this.testCase);
-
-  @override
-  List<Object?> get props => [testCase];
-}
-
-class UpdateTestCaseEvent extends TestPlanEvent {
-  final TestCaseEntity testCase;
-  const UpdateTestCaseEvent(this.testCase);
-
-  @override
-  List<Object?> get props => [testCase];
-}
-
-class DeleteTestCaseEvent extends TestPlanEvent {
-  final String id;
-  const DeleteTestCaseEvent(this.id);
-
-  @override
-  List<Object?> get props => [id];
+  const factory TestPlanEvent.deleteTestCase({
+    required String id,
+  }) = DeleteTestCaseEvent;
 }

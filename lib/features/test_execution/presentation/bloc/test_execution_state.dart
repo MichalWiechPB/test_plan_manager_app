@@ -1,35 +1,21 @@
-import 'package:equatable/equatable.dart';
-
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../project_list/domain/entities/project.dart';
 import '../../domain/entities/project_structure.dart';
 
-class TestExecutionState extends Equatable {
-  final bool loading;
-  final List<ProjectEntity> projects;
-  final ProjectStructureEntity? structure;
-  final String? errorMessage;
+part 'test_execution_state.freezed.dart';
 
-  const TestExecutionState({
-    this.loading = false,
-    this.projects = const [],
-    this.structure,
-    this.errorMessage,
-  });
+@freezed
+sealed class TestExecutionState with _$TestExecutionState {
+  const factory TestExecutionState.initial() = TestExecutionInitial;
 
-  TestExecutionState copyWith({
-    bool? loading,
-    List<ProjectEntity>? projects,
+  const factory TestExecutionState.loading() = TestExecutionLoading;
+
+  const factory TestExecutionState.success({
+    required List<ProjectEntity> projects,
     ProjectStructureEntity? structure,
-    String? errorMessage,
-  }) {
-    return TestExecutionState(
-      loading: loading ?? this.loading,
-      projects: projects ?? this.projects,
-      structure: structure ?? this.structure,
-      errorMessage: errorMessage,
-    );
-  }
+  }) = TestExecutionSuccess;
 
-  @override
-  List<Object?> get props => [loading, projects, structure, errorMessage];
+  const factory TestExecutionState.failure({
+    required String errorMessage,
+  }) = TestExecutionFailure;
 }

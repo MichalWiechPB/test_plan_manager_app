@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:test_plan_manager_app/database/data.dart';
+import 'package:test_plan_manager_app/database/drift_database/data.dart';
 
 part 'users_dao.g.dart';
 @DriftAccessor(tables:[Users])

@@ -4,7 +4,7 @@ import '../../../../core/error/failures.dart';
 import '../../domain/entities/test_case.dart';
 import '../../domain/repositories/test_plan_repository.dart';
 import 'package:test_plan_manager_app/database/daos/test_cases_dao.dart';
-import 'package:test_plan_manager_app/database/data.dart';
+import 'package:test_plan_manager_app/database/drift_database/data.dart';
 import '../models/dtos/test_case_dto.dart';
 
 class TestPlanRepositoryImpl implements TestPlanRepository {

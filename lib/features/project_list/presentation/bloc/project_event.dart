@@ -1,40 +1,22 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:test_plan_manager_app/features/project_list/domain/entities/project.dart';
 
-import '../../domain/entities/project.dart';
+part 'project_event.freezed.dart';
 
-abstract class ProjectEvent extends Equatable {
-  const ProjectEvent();
+@freezed
+sealed class ProjectEvent with _$ProjectEvent {
+  const factory ProjectEvent.getAll() = GetAllProjectsEvent;
 
-  @override
-  List<Object?> get props => [];
+  const factory ProjectEvent.create({
+    required ProjectEntity project,
+  }) = CreateProjectEvent;
+
+  const factory ProjectEvent.update({
+    required ProjectEntity project,
+  }) = UpdateProjectEvent;
+
+  const factory ProjectEvent.delete({
+    required String id,
+  }) = DeleteProjectEvent;
 }
-
-class GetAllProjectsEvent extends ProjectEvent {}
-class CreateProjectEvent extends ProjectEvent {
-  final ProjectEntity project;
-
-  const CreateProjectEvent(this.project);
-
-  @override
-  List<Object?> get props => [project];
-}
-
-class UpdateProjectEvent extends ProjectEvent {
-  final ProjectEntity project;
-
-  const UpdateProjectEvent(this.project);
-
-  @override
-  List<Object?> get props => [project];
-}
-
-class DeleteProjectEvent extends ProjectEvent {
-  final String id;
-
-  const DeleteProjectEvent(this.id);
-
-  @override
-  List<Object?> get props => [id];
-}
-
 

@@ -1,95 +1,54 @@
-import 'package:equatable/equatable.dart';
-
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
-abstract class ModuleEvent extends Equatable {
-  const ModuleEvent();
+part 'module_event.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
+@freezed
+sealed class ModuleEvent with _$ModuleEvent {
+  const factory ModuleEvent.getModulesForProject({
+    required String projectId,
+    String? projectName,
+  }) = GetModulesForProjectEvent;
+
+  const factory ModuleEvent.getSubmodulesForModule({
+    required String moduleId,
+  }) = GetSubmodulesForModuleEvent;
+
+  const factory ModuleEvent.loadPreviewForModule({
+    required String moduleId,
+  }) = LoadPreviewForModuleEvent;
+
+  const factory ModuleEvent.navigateBack({
+    required String projectId,
+  }) = NavigateBackEvent;
+
+  const factory ModuleEvent.setVisitedPath({
+    required String projectId,
+    required List<String> visited,
+  }) = SetVisitedPathEvent;
+
+  const factory ModuleEvent.createModule({
+    required ModuleEntity module,
+  }) = CreateModuleEvent;
+
+  const factory ModuleEvent.updateModule({
+    required ModuleEntity module,
+  }) = UpdateModuleEvent;
+
+  const factory ModuleEvent.deleteModule({
+    required String moduleId,
+  }) = DeleteModuleEvent;
+
+  const factory ModuleEvent.createTestPlan({
+    required TestPlanEntity plan,
+  }) = CreateTestPlanEvent;
+
+  const factory ModuleEvent.updateTestPlan({
+    required TestPlanEntity plan,
+  }) = UpdateTestPlanEvent;
+
+  const factory ModuleEvent.deleteTestPlan({
+    required String testPlanId,
+  }) = DeleteTestPlanEvent;
 }
-
-/// 🔹 Pobiera moduły główne dla danego projektu
-class GetModulesForProjectEvent extends ModuleEvent {
-  final String projectId;
-  final String? projectName;
-  const GetModulesForProjectEvent(this.projectId, {this.projectName});
-
-  @override
-  List<Object?> get props => [projectId];
-}
-
-/// 🔹 Pobiera submoduły i plany testowe dla danego modułu
-class GetSubmodulesForModuleEvent extends ModuleEvent {
-  final String moduleId;
-  const GetSubmodulesForModuleEvent(this.moduleId);
-
-  @override
-  List<Object?> get props => [moduleId];
-}
-
-/// 🔹 Ładuje podgląd (maks. 3 elementy) dla modułu — do kafelka
-class LoadPreviewForModuleEvent extends ModuleEvent {
-  final String moduleId;
-  const LoadPreviewForModuleEvent(this.moduleId);
-
-  @override
-  List<Object?> get props => [moduleId];
-}
-
-/// 🔹 Cofnięcie o jeden poziom w strukturze modułów (zachowuje się jak „Back”)
-class NavigateBackEvent extends ModuleEvent {
-  final String projectId;
-  const NavigateBackEvent(this.projectId);
-
-  @override
-  List<Object?> get props => [projectId];
-}
-class SetVisitedPathEvent extends ModuleEvent {
-  final String projectId;
-  final List<String> visited;
-  const SetVisitedPathEvent(this.projectId, this.visited);
-
-  @override
-  List<Object?> get props => [projectId, visited];
-}
-// CRUD Modules
-class CreateModuleEvent extends ModuleEvent {
-  final ModuleEntity module;
-  const CreateModuleEvent(this.module);
-  @override List<Object?> get props => [module];
-}
-
-class UpdateModuleEvent extends ModuleEvent {
-  final ModuleEntity module;
-  const UpdateModuleEvent(this.module);
-  @override List<Object?> get props => [module];
-}
-
-class DeleteModuleEvent extends ModuleEvent {
-  final String moduleId;
-  const DeleteModuleEvent(this.moduleId);
-  @override List<Object?> get props => [moduleId];
-}
-
-// CRUD TestPlans
-class CreateTestPlanEvent extends ModuleEvent {
-  final TestPlanEntity plan;
-  const CreateTestPlanEvent(this.plan);
-  @override List<Object?> get props => [plan];
-}
-
-class UpdateTestPlanEvent extends ModuleEvent {
-  final TestPlanEntity plan;
-  const UpdateTestPlanEvent(this.plan);
-  @override List<Object?> get props => [plan];
-}
-
-class DeleteTestPlanEvent extends ModuleEvent {
-  final String testPlanId;
-  const DeleteTestPlanEvent(this.testPlanId);
-  @override List<Object?> get props => [testPlanId];
-}
-
-

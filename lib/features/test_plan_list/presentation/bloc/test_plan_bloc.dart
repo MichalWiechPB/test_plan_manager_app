@@ -28,19 +28,17 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       GetTestCasesForPlanEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    emit(state.copyWith(status: TestPlanStatus.loading));
+    emit(const TestPlanState.loading());
 
-    final result = await getTestCasesForPlan(PlanIdParams(event.planId));
-
-    result.fold(
-          (failure) => emit(state.copyWith(
-        status: TestPlanStatus.failure,
-        errorMessage: failure.message ?? 'Nie udało się pobrać test case\'ów',
-      )),
-          (cases) => emit(state.copyWith(
-        status: TestPlanStatus.success,
-        testCases: cases,
-      )),
+    (await getTestCasesForPlan(PlanIdParams(event.planId))).fold(
+          (failure) => emit(
+        TestPlanState.failure(
+          errorMessage: failure.message ?? 'Wystąpił nieznany błąd',
+        ),
+      ),
+          (cases) => emit(
+        TestPlanState.success(testCases: cases),
+      ),
     );
   }
 
@@ -49,7 +47,12 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       Emitter<TestPlanState> emit,
       ) async {
     await createTestCase(CreateTestCaseParams(event.testCase));
-    add(GetTestCasesForPlanEvent(event.testCase.planId));
+
+    add(
+      TestPlanEvent.getTestCasesForPlan(
+        planId: event.testCase.planId,
+      ),
+    );
   }
 
   Future<void> _onUpdateTestCase(
@@ -57,17 +60,32 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       Emitter<TestPlanState> emit,
       ) async {
     await updateTestCase(UpdateTestCaseParams(event.testCase));
-    add(GetTestCasesForPlanEvent(event.testCase.planId));
+
+    add(
+      TestPlanEvent.getTestCasesForPlan(
+        planId: event.testCase.planId,
+      ),
+    );
   }
 
   Future<void> _onDeleteTestCase(
       DeleteTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    final currentPlanId = state.testCases.isNotEmpty ? state.testCases.first.planId : '';
+    final planId = state.maybeWhen(
+      success: (cases) =>
+      cases.isNotEmpty ? cases.first.planId : null,
+      orElse: () => null,
+    );
+
     await deleteTestCase(DeleteTestCaseParams(event.id));
-    if (currentPlanId.isNotEmpty) {
-      add(GetTestCasesForPlanEvent(currentPlanId));
+
+    if (planId != null) {
+      add(
+        TestPlanEvent.getTestCasesForPlan(
+          planId: planId,
+        ),
+      );
     }
   }
 }

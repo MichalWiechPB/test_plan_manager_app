@@ -19,11 +19,11 @@ class _ProjectListPageState extends State<ProjectListPage> {
   @override
   void initState() {
     super.initState();
-    _dispatchLoadProjects();
+    _loadProjects();
   }
 
-  void _dispatchLoadProjects() {
-    BlocProvider.of<ProjectBloc>(context).add(GetAllProjectsEvent());
+  void _loadProjects() {
+    context.read<ProjectBloc>().add(const ProjectEvent.getAll());
   }
 
   Future<void> _openCreateProjectForm() async {
@@ -39,62 +39,104 @@ class _ProjectListPageState extends State<ProjectListPage> {
     );
 
     if (result == true && mounted) {
-      _dispatchLoadProjects();
+      _loadProjects();
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Projects')),
-      body: BlocBuilder<ProjectBloc, ProjectState>(
-        builder: (context, state) {
-          if (state.status == ProjectStatus.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (state.status == ProjectStatus.failure) {
-            return const Center(child: Text('Failed to load projects'));
-          }
-
-          final projects = state.projects;
-
-          return Column(
-            children: [
-              Expanded(
-                child: RefreshIndicator(
-                  onRefresh: () async => _dispatchLoadProjects(),
-                  child: projects.isEmpty
-                      ? const Center(child: Text('No projects found'))
-                      : ListView.builder(
-                    itemCount: projects.length,
-                    itemBuilder: (context, index) {
-                      return ProjectTile(project: projects[index]);
-                    },
-                  ),
-                ),
-              ),
-
-              SafeArea(
-                child: Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  child: ElevatedButton(
-                    onPressed: () {
-                      context.go('/execution');
-                    },
-                    child: const Text('Start Test Execution'),
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('Projects')),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _openCreateProjectForm,
+          child: const Icon(Icons.add),
+        ),
+        body: BlocBuilder<ProjectBloc, ProjectState>(
+          builder: (context, state) {
+            return state.when(
+              initial: _renderInitial,
+              loading: _renderLoading,
+              failure: _renderFailure,
+              success: (projects) => _renderSuccess(context, projects),
+            );
+          },
+        ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _openCreateProjectForm,
-        child: const Icon(Icons.add),
+    );
+  }
+
+  Widget _renderInitial() {
+    return const Center(
+      child: Text('Loading...'),
+    );
+  }
+
+  Widget _renderLoading() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _renderFailure(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error, size: 48.0, color: Colors.red),
+            const SizedBox(height: 16.0),
+            Text(
+              message,
+              style: const TextStyle(fontSize: 16.0),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24.0),
+            ElevatedButton.icon(
+              onPressed: _loadProjects,
+              icon: const Icon(Icons.refresh),
+              label: const Text('Try Again'),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+
+  Widget _renderSuccess(BuildContext context, List projects) {
+    return Column(
+      children: [
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async => _loadProjects(),
+            child: projects.isEmpty
+                ? const Center(
+              child: Text(
+                'No projects found',
+                style: TextStyle(fontSize: 16.0),
+              ),
+            )
+                : ListView.builder(
+              physics: const AlwaysScrollableScrollPhysics(),
+              itemCount: projects.length,
+              itemBuilder: (context, index) {
+                return ProjectTile(project: projects[index]);
+              },
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () => context.go('/execution'),
+              child: const Text('Start Test Execution'),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

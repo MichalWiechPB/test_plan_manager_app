@@ -1,35 +1,21 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../../project_list/domain/entities/project.dart';
 import '../../domain/entities/project_structure.dart';
 
-abstract class TestExecutionEvent extends Equatable {
-  const TestExecutionEvent();
+part 'test_execution_event.freezed.dart';
 
-  @override
-  List<Object?> get props => [];
-}
-class GetAllProjectsForTestsEvent extends TestExecutionEvent {
-  const GetAllProjectsForTestsEvent();
-}
+@freezed
+sealed class TestExecutionEvent with _$TestExecutionEvent {
+  const factory TestExecutionEvent.getAllProjectsForTests() =
+  GetAllProjectsForTestsEvent;
 
-class GetProjectStructureEvent extends TestExecutionEvent {
-  final String projectId;
+  const factory TestExecutionEvent.getProjectStructure({
+    required String projectId,
+  }) = GetProjectStructureEvent;
 
-  const GetProjectStructureEvent(this.projectId);
+  const factory TestExecutionEvent.updateStepTempStatus({
+    required StepStatusPathEntity stepStatus,
+  }) = UpdateStepTempStatusEvent;
 
-  @override
-  List<Object?> get props => [projectId];
-}
-
-class UpdateStepTempStatusEvent extends TestExecutionEvent {
-  final StepStatusPathEntity stepStatus;
-
-  const UpdateStepTempStatusEvent(this.stepStatus);
-
-  @override
-  List<Object?> get props => [stepStatus];
-}
-
-class ExportToFileEvent extends TestExecutionEvent {
-  const ExportToFileEvent();
+  const factory TestExecutionEvent.exportToFile() = ExportToFileEvent;
 }

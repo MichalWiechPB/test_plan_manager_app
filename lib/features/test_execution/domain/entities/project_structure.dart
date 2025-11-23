@@ -1,8 +1,9 @@
 
+import 'package:test_plan_manager_app/features/test_step_list/domain/entities/test_step.dart';
+
 import '../../../module_list/domain/entities/module.dart';
 import '../../../module_list/domain/entities/test_plan.dart';
 import '../../../project_list/domain/entities/project.dart';
-import '../../../test_case_list/domain/entities/test_step.dart';
 import '../../../test_plan_list/domain/entities/test_case.dart';
 
 class ProjectStructureEntity {

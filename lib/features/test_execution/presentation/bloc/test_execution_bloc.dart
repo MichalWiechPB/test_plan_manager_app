@@ -1,11 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/usecases/usecase.dart';
+import '../../../project_list/domain/entities/project.dart';
 import '../../domain/usecases/export_to_file.dart';
 import '../../domain/usecases/get_all_projects.dart';
 import '../../domain/usecases/get_project_structure.dart';
 import '../../domain/usecases/update_step_temp_status.dart';
-
 import 'test_execution_event.dart';
 import 'test_execution_state.dart';
 
@@ -15,114 +14,86 @@ class TestExecutionBloc extends Bloc<TestExecutionEvent, TestExecutionState> {
   final UpdateStepTempStatus updateStepTempStatus;
   final ExportToFile exportToFile;
 
-
   TestExecutionBloc({
     required this.getAllProjectsUseCase,
     required this.getProjectStructure,
     required this.updateStepTempStatus,
     required this.exportToFile,
-  }) : super(const TestExecutionState()) {
+  }) : super(const TestExecutionState.initial()) {
     on<GetAllProjectsForTestsEvent>(_onGetAllProjects);
     on<GetProjectStructureEvent>(_onGetProjectStructure);
     on<UpdateStepTempStatusEvent>(_onUpdateStepTempStatus);
-    on<ExportToFileEvent>(_onExportToFileStatus);
+    on<ExportToFileEvent>(_onExportToFile);
   }
 
-  // -----------------------------------------------------
-  // 1️⃣ Pobranie listy projektów
-  // -----------------------------------------------------
   Future<void> _onGetAllProjects(
-      GetAllProjectsForTestsEvent event, Emitter<TestExecutionState> emit) async {
+      GetAllProjectsForTestsEvent event,
+      Emitter<TestExecutionState> emit,
+      ) async {
+    emit(const TestExecutionState.loading());
 
-    emit(state.copyWith(loading: true, errorMessage: null));
-
-    final result = await getAllProjectsUseCase(NoParams());
-
-    result.fold(
-          (failure) => emit(
-        state.copyWith(
-          loading: false,
-          errorMessage: failure.message ?? "Unknown error",
-        ),
-      ),
-          (projects) => emit(
-        state.copyWith(
-          loading: false,
-          projects: projects,
-          errorMessage: null,
-        ),
-      ),
+    (await getAllProjectsUseCase(NoParams())).fold(
+          (f) => emit(TestExecutionState.failure(
+        errorMessage: f.message ?? 'Nie udało się pobrać projektów',
+      )),
+          (projects) => emit(TestExecutionState.success(
+        projects: projects,
+        structure: null,
+      )),
     );
   }
 
-  // -----------------------------------------------------
-  // 2️⃣ Pobranie struktury projektu
-  // -----------------------------------------------------
   Future<void> _onGetProjectStructure(
-      GetProjectStructureEvent event, Emitter<TestExecutionState> emit) async {
+      GetProjectStructureEvent event,
+      Emitter<TestExecutionState> emit,
+      ) async {
+    final prevProjects = state.maybeWhen(
+      success: (projects, _) => projects,
+      orElse: () => const <ProjectEntity>[],
+    );
 
-    emit(state.copyWith(loading: true, errorMessage: null));
+    emit(const TestExecutionState.loading());
 
     final result = await getProjectStructure(event.projectId);
 
     result.fold(
-          (failure) => emit(
-        state.copyWith(
-          loading: false,
-          errorMessage: failure.message ?? "Unknown error",
-        ),
-      ),
-          (structure) => emit(
-        state.copyWith(
-          loading: false,
-          structure: structure,
-          errorMessage: null,
-        ),
-      ),
+          (f) => emit(TestExecutionState.failure(
+        errorMessage: f.message ?? 'Nie udało się pobrać struktury projektu',
+      )),
+          (structure) => emit(TestExecutionState.success(
+        projects: prevProjects,
+        structure: structure,
+      )),
     );
   }
 
-  // -----------------------------------------------------
-  // 3️⃣ Lokalna aktualizacja tymczasowego statusu kroków
-  // -----------------------------------------------------
+
+
   Future<void> _onUpdateStepTempStatus(
-      UpdateStepTempStatusEvent event, Emitter<TestExecutionState> emit) async {
-
-    final result = await updateStepTempStatus(event.stepStatus);
-
-    result.fold(
-          (failure) => emit(
-        state.copyWith(
-          errorMessage: failure.message ?? "Unknown error",
-        ),
-      ),
-          (_) => emit(
-        state.copyWith(errorMessage: null), // stan się nie zmienia
-      ),
+      UpdateStepTempStatusEvent event,
+      Emitter<TestExecutionState> emit,
+      ) async {
+    (await updateStepTempStatus(event.stepStatus)).fold(
+          (f) => emit(TestExecutionState.failure(
+        errorMessage: f.message ?? 'Błąd zmiany statusu kroku testowego',
+      )),
+          (_) => emit(state),
     );
   }
 
-  Future<void> _onExportToFileStatus(
+  Future<void> _onExportToFile(
       ExportToFileEvent event,
       Emitter<TestExecutionState> emit,
       ) async {
-    emit(state.copyWith(loading: true, errorMessage: null));
+    emit(const TestExecutionState.loading());
 
-    final result = await exportToFile(NoParams());
-
-    result.fold(
-          (failure) => emit(
-        state.copyWith(
-          loading: false,
-          errorMessage: failure.message ?? "Nie udało się wyeksportować",
-        ),
-      ),
-          (filePath) => emit(
-        state.copyWith(
-          loading: false,
-          errorMessage: "Plik zapisano: $filePath", // UI wyświetli snackbar
-        ),
-      ),
+    (await exportToFile(NoParams())).fold(
+          (f) => emit(TestExecutionState.failure(
+        errorMessage: f.message ?? 'Nie udało się wyeksportować danych',
+      )),
+          (filePath) => emit(TestExecutionState.failure(
+        errorMessage: 'Plik zapisano: $filePath',
+      )),
     );
   }
 }
