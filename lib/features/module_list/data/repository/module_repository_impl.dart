@@ -54,8 +54,30 @@ class ModuleRepositoryImpl implements ModuleRepository {
 
   @override
   Future<Either<Failure, List<TestPlanEntity>>> getPlansForModule(String moduleId) async {
-    final result = await local.getPlansForModule(moduleId);
-    return result.map((rows) => rows.map((p) => p.toEntity()).toList());
+    final localResult = await local.getPlansForModule(moduleId);
+
+    if (localResult.isRight()) {
+      final localPlans = localResult
+          .getOrElse(() => [])
+          .map((p) => p.toEntity())
+          .toList();
+      if (localPlans.isNotEmpty) {
+        return Right(localPlans);
+      }
+    }
+
+    try {
+      final remoteDtos = await remote.fetchTestPlansForModule(moduleId);
+
+      for (final dto in remoteDtos) {
+        await local.upsertTestPlan(dto.toDbModel());
+      }
+
+      final refreshed = await local.getPlansForModule(moduleId);
+      return refreshed.map((rows) => rows.map((p) => p.toEntity()).toList());
+    } catch (e) {
+      return Left(DatabaseFailure(e.toString()));
+    }
   }
 
   @override

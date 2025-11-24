@@ -32,22 +32,23 @@ class TestPlanDto {
   Map<String, dynamic> toJson() => _$TestPlanDtoToJson(this);
 
   factory TestPlanDto.fromGraphJson(Map<String, dynamic> json) {
-    final fields = json['fields'] as Map<String, dynamic>;
+    final fields = json['fields'] ?? {};
 
     return TestPlanDto(
-      id: json['id'].toString(),
-      name: fields['name'],
+      id: json['id'], // zawsze jest
+      name: fields['Title'] ?? fields['name'] ?? '',
       description: fields['description'],
-      moduleId: fields['moduleId'],
+      moduleId: fields['moduleId'] ?? '',
       ownerUserId: fields['ownerUserId'],
       lastModifiedUtc: fields['lastModifiedUtc'] != null
           ? DateTime.parse(fields['lastModifiedUtc'])
           : null,
-      overallPassed: fields['overallPassed'],
-      overallFailed: fields['overallFailed'],
-      overallBlocked: fields['overallBlocked'],
+      overallPassed: fields['overallPassed'] ?? 0,
+      overallFailed: fields['overallFailed'] ?? 0,
+      overallBlocked: fields['overallBlocked'] ?? 0,
     );
   }
+
 
   Map<String, dynamic> toGraphCreateJson() {
     return {
