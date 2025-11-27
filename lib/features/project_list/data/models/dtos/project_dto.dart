@@ -4,13 +4,13 @@ part 'project_dto.g.dart';
 
 @JsonSerializable()
 class ProjectDto {
-  final String id;
+  final String? id;
   final String name;
   final String? description;
   final DateTime? createdAtUtc;
 
   const ProjectDto({
-    required this.id,
+    this.id,
     required this.name,
     this.description,
     this.createdAtUtc,
@@ -21,37 +21,34 @@ class ProjectDto {
 
   Map<String, dynamic> toJson() => _$ProjectDtoToJson(this);
 
-  /// MS GRAPH: GET /items?expand=fields
   factory ProjectDto.fromGraphJson(Map<String, dynamic> json) {
-    final fields = json['fields'] as Map<String, dynamic>;
+    final fields = json['fields'] as Map<String, dynamic>?;
 
     return ProjectDto(
-      id: json['id'].toString(),
-      name: fields['name'],
-      description: fields['description'],
-      createdAtUtc: fields['createdAtUtc'] != null
-          ? DateTime.parse(fields['createdAtUtc'])
+      id: json['id']?.toString(),
+      name: fields?['name'] ?? '',
+      description: fields?['description'],
+      createdAtUtc: fields?['createdAtUtc'] != null
+          ? DateTime.parse(fields!['createdAtUtc']).toUtc()
           : null,
     );
   }
 
-  /// POST → /lists/{id}/items
   Map<String, dynamic> toGraphCreateJson() {
     return {
       "fields": {
         "name": name,
         "description": description,
-        "createdAtUtc": createdAtUtc?.toIso8601String(),
+        "createdAtUtc": createdAtUtc?.toUtc().toIso8601String(),
       }
     };
   }
 
-  /// PATCH → /lists/{id}/items/{itemId}/fields
   Map<String, dynamic> toGraphUpdateJson() {
     return {
       "name": name,
       "description": description,
-      "createdAtUtc": createdAtUtc?.toIso8601String(),
+      "createdAtUtc": createdAtUtc?.toUtc().toIso8601String(),
     };
   }
 }

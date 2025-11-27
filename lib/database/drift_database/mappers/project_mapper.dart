@@ -15,6 +15,17 @@ extension ProjectDataMapper on Project {
   }
 }
 
+extension ProjectDtoEntityMapper on ProjectDto {
+  ProjectEntity toEntity() {
+    return ProjectEntity(
+      id: id ?? '',
+      name: name,
+      description: description,
+      createdAtUtc: createdAtUtc,
+    );
+  }
+}
+
 extension ProjectEntityDbMapper on ProjectEntity {
   ProjectsCompanion toDbModel() {
     return ProjectsCompanion(
@@ -33,7 +44,7 @@ extension ProjectEntityDbMapper on ProjectEntity {
 extension ProjectDtoDbMapper on ProjectDto {
   ProjectsCompanion toDbModel() {
     return ProjectsCompanion(
-      id: drift.Value(id),
+      id: drift.Value(id ?? ''),
       name: drift.Value(name),
       description: description != null
           ? drift.Value(description!)
@@ -44,3 +55,15 @@ extension ProjectDtoDbMapper on ProjectDto {
     );
   }
 }
+
+extension ProjectEntityDtoMapper on ProjectEntity {
+  ProjectDto toDto() {
+    return ProjectDto(
+      id: id,
+      name: name,
+      description: description,
+      createdAtUtc: createdAtUtc,
+    );
+  }
+}
+

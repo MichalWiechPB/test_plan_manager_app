@@ -7,7 +7,7 @@ abstract class ModuleRepository {
   Stream<Either<Failure, List<ModuleEntity>>> getModulesForProject(String projectId);
 
   Future<Either<Failure, List<ModuleEntity>>> getSubmodules(String moduleId);
-  Future<Either<Failure, List<TestPlanEntity>>> getPlansForModule(String moduleId);
+  Stream<Either<Failure, List<TestPlanEntity>>> getPlansForModule(String moduleId);
 
   Future<Either<Failure, void>> createModule(ModuleEntity module);
   Future<Either<Failure, void>> updateModule(ModuleEntity module);

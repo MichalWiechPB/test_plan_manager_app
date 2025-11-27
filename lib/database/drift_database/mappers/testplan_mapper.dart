@@ -4,7 +4,6 @@ import '../../../../../database/drift_database/data.dart';
 import '../../../features/module_list/data/models/dtos/test_plan_dto.dart';
 import '../../../features/module_list/domain/entities/test_plan.dart';
 
-
 extension TestPlanMapper on TestPlan {
   TestPlanEntity toEntity() => TestPlanEntity(
     id: id,
@@ -26,6 +25,16 @@ extension TestPlanEntityDbMapper on TestPlanEntity {
       lastModifiedUtc: const drift.Value.absent(),
     );
   }
+
+  TestPlanDto toDto() {
+    return TestPlanDto(
+      id: id,
+      name: name,
+      description: description,
+      moduleId: moduleId,
+      lastModifiedUtc: null,
+    );
+  }
 }
 
 extension TestPlanDtoDbMapper on TestPlanDto {
@@ -43,6 +52,15 @@ extension TestPlanDtoDbMapper on TestPlanDto {
       overallPassed: const drift.Value.absent(),
       overallFailed: const drift.Value.absent(),
       overallBlocked: const drift.Value.absent(),
+    );
+  }
+
+  TestPlanEntity toEntity() {
+    return TestPlanEntity(
+      id: id,
+      name: name,
+      description: description,
+      moduleId: moduleId,
     );
   }
 }

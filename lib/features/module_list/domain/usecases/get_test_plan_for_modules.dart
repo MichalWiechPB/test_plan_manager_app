@@ -1,9 +1,8 @@
 import 'package:dartz/dartz.dart';
 import 'package:test_plan_manager_app/core/error/failures.dart';
-import 'package:test_plan_manager_app/core/usecases/usecase.dart';
+import 'package:test_plan_manager_app/core/usecases/streamusecase.dart';
 import 'package:test_plan_manager_app/features/module_list/domain/repository/module_repository.dart';
 import '../entities/test_plan.dart';
-import '../../../test_plan_list/domain/repositories/test_case_repository.dart';
 
 class ModuleIdParams {
   final String moduleId;
@@ -11,13 +10,20 @@ class ModuleIdParams {
   ModuleIdParams(this.moduleId);
 }
 
-class GetTestPlansForModule extends UseCase<List<TestPlanEntity>, ModuleIdParams> {
+class GetTestPlansForModule
+    extends StreamUseCase<List<TestPlanEntity>, ModuleIdParams> {
   final ModuleRepository repository;
 
   GetTestPlansForModule(this.repository);
 
   @override
-  Future<Either<Failure, List<TestPlanEntity>>> call(ModuleIdParams params) {
-    return repository.getPlansForModule(params.moduleId);
+  Stream<List<TestPlanEntity>> call(ModuleIdParams params) {
+    return repository.getPlansForModule(params.moduleId).asyncMap(
+          (either) => either.fold(
+              (failure) => throw Exception(failure.message ?? 'Unknown error'),
+            (data) => data,
+      ),
+    );
   }
 }
+

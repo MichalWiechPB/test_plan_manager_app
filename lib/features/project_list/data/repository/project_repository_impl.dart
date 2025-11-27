@@ -1,9 +1,8 @@
 import 'package:dartz/dartz.dart';
-import 'package:test_plan_manager_app/database/drift_database/mappers/project_mapper.dart';
 import '../../../../core/error/failures.dart';
 import '../../../../database/datasources/projects/local/projects_local_datasource.dart';
 import '../../../../database/datasources/projects/remote/projects_remote_datasource.dart';
-import '../../../../database/drift_database/data.dart';
+import '../../../../database/drift_database/mappers/project_mapper.dart';
 import '../../domain/entities/project.dart';
 import '../../domain/repository/project_repository.dart';
 
@@ -22,41 +21,55 @@ class ProjectRepositoryImpl implements ProjectRepository {
 
     if (localResult.isRight()) {
       yield Right(
-        localResult
-            .getOrElse(() => [])
-            .map((p) => p.toEntity())
-            .toList(),
+        localResult.getOrElse(() => []).map((p) => p.toEntity()).toList(),
       );
     }
 
     try {
       final remoteDtos = await remote.fetchProjects();
-
       for (final dto in remoteDtos) {
         await local.upsertProject(dto.toDbModel());
       }
 
       final refreshed = await local.getAllProjects();
-      yield refreshed.map(
-            (projects) => projects.map((p) => p.toEntity()).toList(),
-      );
+      yield refreshed.map((projects) => projects.map((p) => p.toEntity()).toList());
     } catch (e) {
-      yield Left(DatabaseFailure(e.toString()));
+      yield Left(DatabaseFailure("Nie udało się pobrać projektów z serwera."));
     }
   }
 
   @override
-  Future<Either<Failure, void>> createProject(ProjectEntity project) {
-    return local.createProject(project.toDbModel());
+  Future<Either<Failure, ProjectEntity>> createProject(ProjectEntity project) async {
+    try {
+      final dto = project.toDto();
+      final createdDto = await remote.createProject(dto);
+      await local.upsertProject(createdDto.toDbModel());
+      return Right(createdDto.toEntity());
+    } catch (e) {
+      return Left(DatabaseFailure("Nie udało się utworzyć projektu."));
+    }
   }
 
   @override
-  Future<Either<Failure, void>> updateProject(ProjectEntity project) {
-    return local.updateProject(project.toDbModel());
+  Future<Either<Failure, ProjectEntity>> updateProject(ProjectEntity project) async {
+    try {
+      final dto = project.toDto();
+      final updatedDto = await remote.updateProject(dto);
+      await local.upsertProject(updatedDto.toDbModel());
+      return Right(updatedDto.toEntity());
+    } catch (e) {
+      return Left(DatabaseFailure("Nie udało się zaktualizować projektu."));
+    }
   }
 
   @override
-  Future<Either<Failure, void>> deleteProject(String id) {
-    return local.deleteProject(id);
+  Future<Either<Failure, void>> deleteProject(String id) async {
+    try {
+      await remote.deleteProject(id);
+      await local.deleteProject(id);
+      return const Right(null);
+    } catch (e) {
+      return Left(DatabaseFailure("Nie udało się usunąć projektu."));
+    }
   }
 }

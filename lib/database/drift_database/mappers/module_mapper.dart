@@ -1,10 +1,8 @@
 import 'package:drift/drift.dart' as drift;
-
 import '../../../features/module_list/data/models/dtos/module_dto.dart';
 import '../../../features/module_list/domain/entities/module.dart';
 import '../data.dart';
 
-/// DOMAIN → ENTITY
 extension ModuleDataMapper on Module {
   ModuleEntity toEntity() {
     return ModuleEntity(
@@ -17,7 +15,6 @@ extension ModuleDataMapper on Module {
   }
 }
 
-/// ENTITY → DB Companion
 extension ModuleEntityDbMapper on ModuleEntity {
   ModulesCompanion toDbModel() {
     return ModulesCompanion(
@@ -32,9 +29,18 @@ extension ModuleEntityDbMapper on ModuleEntity {
           : const drift.Value.absent(),
     );
   }
+
+  ModuleDto toDto() {
+    return ModuleDto(
+      id: id,
+      name: name,
+      description: description,
+      projectId: projectId,
+      parentModuleId: parentModuleId,
+    );
+  }
 }
 
-/// DTO → DB Companion
 extension ModuleDtoDbMapper on ModuleDto {
   ModulesCompanion toDbModel() {
     return ModulesCompanion(
@@ -47,6 +53,16 @@ extension ModuleDtoDbMapper on ModuleDto {
       parentModuleId: parentModuleId != null
           ? drift.Value(parentModuleId!)
           : const drift.Value.absent(),
+    );
+  }
+
+  ModuleEntity toEntity() {
+    return ModuleEntity(
+      id: id,
+      name: name,
+      description: description,
+      projectId: projectId,
+      parentModuleId: parentModuleId,
     );
   }
 }

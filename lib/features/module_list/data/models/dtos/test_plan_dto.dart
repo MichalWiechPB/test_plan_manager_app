@@ -36,7 +36,7 @@ class TestPlanDto {
 
     return TestPlanDto(
       id: json['id'], // zawsze jest
-      name: fields['Title'] ?? fields['name'] ?? '',
+      name: fields['Title']?.toString() ?? fields['name']?.toString() ?? '',
       description: fields['description'],
       moduleId: fields['moduleId'] ?? '',
       ownerUserId: fields['ownerUserId'],

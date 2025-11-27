@@ -25,19 +25,17 @@ class ModuleDto {
 
   Map<String, dynamic> toJson() => _$ModuleDtoToJson(this);
 
-  /// MS GRAPH: GET /items?expand=fields
   factory ModuleDto.fromGraphJson(Map<String, dynamic> json) {
-    final fields = json['fields'] as Map<String, dynamic>;
+    final Map<String, dynamic> fields =
+    json['fields'] is Map<String, dynamic> ? json['fields'] : {};
 
     return ModuleDto(
-      id: json['id'].toString(),
-      name: fields['name'],
-      description: fields['description'],
-      projectId: fields['projectId'],
-      parentModuleId: fields['parentModuleId'],
-      createdAtUtc: fields['createdAtUtc'] != null
-          ? DateTime.parse(fields['createdAtUtc'])
-          : null,
+      id: json['id']?.toString() ?? '',
+      name: fields['name']?.toString() ?? '',
+      description: fields['description']?.toString(),
+      projectId: fields['projectId']?.toString() ?? '',
+      parentModuleId: fields['parentModuleId']?.toString(),
+      createdAtUtc: _parseDate(fields['createdAtUtc']),
     );
   }
 
@@ -55,11 +53,20 @@ class ModuleDto {
 
   Map<String, dynamic> toGraphUpdateJson() {
     return {
-      "name": name,
+      if (name.isNotEmpty) "name": name,
       "description": description,
       "projectId": projectId,
       "parentModuleId": parentModuleId,
       "createdAtUtc": createdAtUtc?.toIso8601String(),
     };
+  }
+
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    try {
+      return DateTime.parse(value.toString());
+    } catch (_) {
+      return null;
+    }
   }
 }
