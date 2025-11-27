@@ -1,74 +1,58 @@
 import 'package:dartz/dartz.dart';
-import 'package:drift/drift.dart' as drift;
+
 import '../../../../core/error/failures.dart';
-import '../../../../database/daos/test_steps_dao.dart';
-import '../../../../database/drift_database/data.dart';
+import '../../../../database/datasources/teststep/local/teststep_local_datasource.dart';
+import '../../../../database/datasources/teststep/remote/teststep_remote_datasource.dart';
+import '../../../../database/drift_database/mappers/teststep_mapper.dart';
 import '../../domain/entities/test_step.dart';
 import '../../domain/repository/test_step_repository.dart';
 
 class TestStepRepositoryImpl implements TestStepRepository {
-  final TestStepsDao dao;
+  final TestStepLocalDataSource local;
+  final TestStepRemoteDataSource remote;
 
-  TestStepRepositoryImpl(this.dao);
+  TestStepRepositoryImpl({required this.local, required this.remote});
 
   @override
-  Future<Either<Failure, List<TestStepEntity>>> getTestStepsForCase(
-      String testCaseId) async {
+  Stream<Either<Failure, List<TestStepEntity>>> getStepsForCase(
+    String caseId,
+  ) async* {
+    final localResult = await local.getTestStepsForCase(caseId);
+
+    if (localResult.isRight()) {
+      yield Right(
+        localResult.getOrElse(() => []).map((row) => row.toEntity()).toList(),
+      );
+    }
     try {
-      final rows = await dao.getStepsForCase(testCaseId);
-      final steps = rows
-          .map((s) =>
-          TestStepEntity(
-            id: s.id,
-            testCaseId: s.testCaseId,
-            stepNumber: s.stepNumber,
-            description: s.description,
-            expected: s.expected,
-            status: s.status,
-          ))
-          .toList();
-      return Right(steps);
+      final remoteDtos = await remote.fetchStepsForCase(caseId);
+
+      for (final dto in remoteDtos) {
+        await local.upsertTestStep(dto.toDbModel());
+      }
+
+      final refreshed = await local.getTestStepsForCase(caseId);
+
+      yield refreshed.map((rows) => rows.map((e) => e.toEntity()).toList());
     } catch (e) {
-      return Left(DatabaseFailure('Nie udało się pobrać kroków testu: $e'));
+      yield Left(DatabaseFailure('Nie udało się zsynchronizować kroków: $e'));
     }
   }
 
   @override
   Future<Either<Failure, void>> createTestStep(TestStepEntity step) async {
     try {
-      await dao.insertStep(
-        TestStepsCompanion(
-          id: drift.Value(step.id),
-          testCaseId: drift.Value(step.testCaseId),
-          stepNumber: drift.Value(step.stepNumber),
-          description: drift.Value(step.description),
-          expected: step.expected != null
-              ? drift.Value(step.expected!)
-              : const drift.Value(null),
-          status: drift.Value(step.status),
-        ),
-      );
+      await local.upsertTestStep(step.toDbModel());
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure('Nie udało się dodać kroku: $e'));
+      return Left(DatabaseFailure('Nie udało się utworzyć kroku: $e'));
     }
   }
 
   @override
   Future<Either<Failure, void>> updateTestStep(TestStepEntity step) async {
     try {
-      await dao.updateStep(
-        TestStepsCompanion(
-          id: drift.Value(step.id),
-          testCaseId: drift.Value(step.testCaseId),
-          stepNumber: drift.Value(step.stepNumber),
-          description: drift.Value(step.description),
-          expected: step.expected != null
-              ? drift.Value(step.expected!)
-              : const drift.Value(null),
-          status: drift.Value(step.status),
-        ),
-      );
+      await local.upsertTestStep(step.toDbModel());
       return const Right(null);
     } catch (e) {
       return Left(DatabaseFailure('Nie udało się zaktualizować kroku: $e'));
@@ -78,7 +62,7 @@ class TestStepRepositoryImpl implements TestStepRepository {
   @override
   Future<Either<Failure, void>> deleteTestStep(String id) async {
     try {
-      await dao.deleteStep(id);
+      await local.deleteTestStep(id);
       return const Right(null);
     } catch (e) {
       return Left(DatabaseFailure('Nie udało się usunąć kroku: $e'));
@@ -87,15 +71,15 @@ class TestStepRepositoryImpl implements TestStepRepository {
 
   @override
   Future<Either<Failure, void>> updateTestStepOrder(
-      List<TestStepEntity> steps) async {
+    List<TestStepEntity> steps,
+  ) async {
     try {
-      for (final s in steps) {
-        await dao.updateStepOrder(s.id, s.stepNumber);
-      }
+      await local.updateTestStepOrder(steps.map((s) => s.toDbModel()).toList());
       return const Right(null);
     } catch (e) {
       return Left(
-          DatabaseFailure('Nie udało się zaktualizować kolejności kroków: $e'));
+        DatabaseFailure('Nie udało się zmienić kolejności kroków: $e'),
+      );
     }
   }
 }

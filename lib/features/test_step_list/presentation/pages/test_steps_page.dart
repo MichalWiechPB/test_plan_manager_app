@@ -167,8 +167,12 @@ class _TestCasePageState extends State<TestCasePage> {
     HapticFeedback.selectionClick();
 
     context.read<TestStepBloc>().add(
-      TestStepEvent.reorderTestSteps(reorderedSteps: reordered),
+      TestStepEvent.reorderTestSteps(
+        reorderedSteps: reordered,
+        testCaseId: widget.testCaseId,
+      ),
     );
+
   }
 
   void _openAddStepDialog(BuildContext context) {

@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'package:dartz/dartz.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:test_plan_manager_app/features/test_step_list/domain/entities/test_step.dart';
-import '../../../../core/usecases/impl/recalculate_testcase_progress.dart';
+import 'package:test_plan_manager_app/core/usecases/impl/recalculate_testcase_progress.dart';
+
+import '../../../../core/error/failures.dart';
+import '../../domain/entities/test_step.dart';
 import '../../domain/usecases/get_teststeps_for_case.dart';
 import '../../domain/usecases/create_test_step.dart';
 import '../../domain/usecases/update_test_step.dart';
@@ -23,7 +27,7 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     required this.updateTestStep,
     required this.deleteTestStep,
     required this.updateTestStepOrder,
-    required this.recalcProgress,
+    required this.recalcProgress
   }) : super(const TestStepState.initial()) {
     on<GetTestStepsForCaseEvent>(_onGet);
     on<CreateTestStepEvent>(_onCreate);
@@ -32,96 +36,108 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     on<ReorderTestStepsEvent>(_onReorder);
   }
 
+  /// ============================
+  /// GET
+  /// ============================
   Future<void> _onGet(
       GetTestStepsForCaseEvent event,
       Emitter<TestStepState> emit,
       ) async {
     emit(const TestStepState.loading());
 
-    (await getTestStepsForCase(event.testCaseId)).fold(
-          (f) => emit(TestStepState.failure(errorMessage: f.message ?? 'Błąd pobierania kroków')),
-          (steps) => emit(TestStepState.success(steps: steps)),
+    await emit.forEach<Either<Failure, List<TestStepEntity>>>(
+      getTestStepsForCase(event.testCaseId),
+      onData: (either) => either.fold(
+            (f) => TestStepState.failure(
+            errorMessage: f.message ?? "Błąd pobierania kroków"),
+            (steps) => TestStepState.success(steps: steps),
+      ),
+      onError: (err, _) =>
+          TestStepState.failure(errorMessage: err.toString()),
     );
   }
 
+  /// ============================
+  /// CREATE
+  /// ============================
   Future<void> _onCreate(
       CreateTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
-    (await createTestStep(event.step)).fold(
-          (f) => emit(TestStepState.failure(errorMessage: f.message ?? 'Nie udało się dodać kroku')),
-          (_) async {
-        final current = state.maybeWhen<List<TestStepEntity>>(
-          success: (steps) => steps,
-          orElse: () => const [],
-        );
+    emit(const TestStepState.loading());
 
-        final newList = [...current, event.step]
-          ..sort((a, b) => a.stepNumber.compareTo(b.stepNumber));
+    final res = await createTestStep(event.step);
 
-        emit(TestStepState.success(steps: newList));
-        await recalcProgress(event.step.testCaseId);
-      },
+    res.fold(
+          (f) => emit(TestStepState.failure(
+        errorMessage: f.message ?? 'Nie udało się dodać kroku',
+      )),
+          (_) => add(TestStepEvent.getTestStepsForCase(
+        testCaseId: event.step.testCaseId,
+      )),
     );
   }
 
+  /// ============================
+  /// UPDATE
+  /// ============================
   Future<void> _onUpdate(
       UpdateTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
-    (await updateTestStep(event.step)).fold(
-          (f) => emit(TestStepState.failure(errorMessage: f.message ?? 'Nie udało się zaktualizować kroku')),
-          (_) async {
-        final updated = state.maybeWhen<List<TestStepEntity>>(
-          success: (steps) => [
-            for (final s in steps) s.id == event.step.id ? event.step : s,
-          ],
-          orElse: () => const [],
-        );
+    emit(const TestStepState.loading());
 
-        emit(TestStepState.success(steps: updated));
-        await recalcProgress(event.step.testCaseId);
-      },
+    final res = await updateTestStep(event.step);
+
+    res.fold(
+          (f) => emit(TestStepState.failure(
+        errorMessage: f.message ?? 'Nie udało się zaktualizować kroku',
+      )),
+          (_) => add(TestStepEvent.getTestStepsForCase(
+        testCaseId: event.step.testCaseId,
+      )),
     );
   }
 
+  /// ============================
+  /// DELETE
+  /// ============================
   Future<void> _onDelete(
       DeleteTestStepEvent event,
       Emitter<TestStepState> emit,
       ) async {
-    (await deleteTestStep(event.stepId)).fold(
-          (f) => emit(TestStepState.failure(errorMessage: f.message ?? 'Nie udało się usunąć kroku')),
-          (_) async {
-        final filtered = state.maybeWhen<List<TestStepEntity>>(
-          success: (steps) => steps.where((s) => s.id != event.stepId).toList(),
-          orElse: () => const [],
-        );
+    emit(const TestStepState.loading());
 
-        final renumbered = [
-          for (int i = 0; i < filtered.length; i++)
-            filtered[i].copyWith(stepNumber: i + 1),
-        ];
+    final res = await deleteTestStep(event.stepId);
 
-        emit(TestStepState.success(steps: renumbered));
-
-        await updateTestStepOrder(renumbered);
-        if (renumbered.isNotEmpty) {
-          await recalcProgress(renumbered.first.testCaseId);
-        }
-      },
+    res.fold(
+          (f) => emit(TestStepState.failure(
+        errorMessage: f.message ?? 'Nie udało się usunąć kroku',
+      )),
+          (_) => add(TestStepEvent.getTestStepsForCase(
+        testCaseId: event.testCaseId,
+      )),
     );
   }
 
+  /// ============================
+  /// REORDER
+  /// ============================
   Future<void> _onReorder(
       ReorderTestStepsEvent event,
       Emitter<TestStepState> emit,
       ) async {
-    (await updateTestStepOrder(event.reorderedSteps)).fold(
-          (f) => emit(TestStepState.failure(errorMessage: f.message ?? 'Nie udało się zmienić kolejności')),
-          (_) async {
-        emit(TestStepState.success(steps: event.reorderedSteps));
-        await recalcProgress(event.reorderedSteps.first.testCaseId);
-      },
+    emit(const TestStepState.loading());
+
+    final res = await updateTestStepOrder(event.reorderedSteps);
+
+    res.fold(
+          (f) => emit(TestStepState.failure(
+        errorMessage: f.message ?? 'Nie udało się zmienić kolejności',
+      )),
+          (_) => add(TestStepEvent.getTestStepsForCase(
+        testCaseId: event.testCaseId,
+      )),
     );
   }
 }

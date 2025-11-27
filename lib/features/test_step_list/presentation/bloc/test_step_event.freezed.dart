@@ -128,14 +128,14 @@ return reorderTestSteps(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String testCaseId)?  getTestStepsForCase,TResult Function( TestStepEntity step)?  createTestStep,TResult Function( TestStepEntity step)?  updateTestStep,TResult Function( String stepId,  String testCaseId)?  deleteTestStep,TResult Function( List<TestStepEntity> reorderedSteps)?  reorderTestSteps,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String testCaseId)?  getTestStepsForCase,TResult Function( TestStepEntity step)?  createTestStep,TResult Function( TestStepEntity step)?  updateTestStep,TResult Function( String stepId,  String testCaseId)?  deleteTestStep,TResult Function( List<TestStepEntity> reorderedSteps,  String testCaseId)?  reorderTestSteps,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GetTestStepsForCaseEvent() when getTestStepsForCase != null:
 return getTestStepsForCase(_that.testCaseId);case CreateTestStepEvent() when createTestStep != null:
 return createTestStep(_that.step);case UpdateTestStepEvent() when updateTestStep != null:
 return updateTestStep(_that.step);case DeleteTestStepEvent() when deleteTestStep != null:
 return deleteTestStep(_that.stepId,_that.testCaseId);case ReorderTestStepsEvent() when reorderTestSteps != null:
-return reorderTestSteps(_that.reorderedSteps);case _:
+return reorderTestSteps(_that.reorderedSteps,_that.testCaseId);case _:
   return orElse();
 
 }
@@ -153,14 +153,14 @@ return reorderTestSteps(_that.reorderedSteps);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String testCaseId)  getTestStepsForCase,required TResult Function( TestStepEntity step)  createTestStep,required TResult Function( TestStepEntity step)  updateTestStep,required TResult Function( String stepId,  String testCaseId)  deleteTestStep,required TResult Function( List<TestStepEntity> reorderedSteps)  reorderTestSteps,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String testCaseId)  getTestStepsForCase,required TResult Function( TestStepEntity step)  createTestStep,required TResult Function( TestStepEntity step)  updateTestStep,required TResult Function( String stepId,  String testCaseId)  deleteTestStep,required TResult Function( List<TestStepEntity> reorderedSteps,  String testCaseId)  reorderTestSteps,}) {final _that = this;
 switch (_that) {
 case GetTestStepsForCaseEvent():
 return getTestStepsForCase(_that.testCaseId);case CreateTestStepEvent():
 return createTestStep(_that.step);case UpdateTestStepEvent():
 return updateTestStep(_that.step);case DeleteTestStepEvent():
 return deleteTestStep(_that.stepId,_that.testCaseId);case ReorderTestStepsEvent():
-return reorderTestSteps(_that.reorderedSteps);}
+return reorderTestSteps(_that.reorderedSteps,_that.testCaseId);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -174,14 +174,14 @@ return reorderTestSteps(_that.reorderedSteps);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String testCaseId)?  getTestStepsForCase,TResult? Function( TestStepEntity step)?  createTestStep,TResult? Function( TestStepEntity step)?  updateTestStep,TResult? Function( String stepId,  String testCaseId)?  deleteTestStep,TResult? Function( List<TestStepEntity> reorderedSteps)?  reorderTestSteps,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String testCaseId)?  getTestStepsForCase,TResult? Function( TestStepEntity step)?  createTestStep,TResult? Function( TestStepEntity step)?  updateTestStep,TResult? Function( String stepId,  String testCaseId)?  deleteTestStep,TResult? Function( List<TestStepEntity> reorderedSteps,  String testCaseId)?  reorderTestSteps,}) {final _that = this;
 switch (_that) {
 case GetTestStepsForCaseEvent() when getTestStepsForCase != null:
 return getTestStepsForCase(_that.testCaseId);case CreateTestStepEvent() when createTestStep != null:
 return createTestStep(_that.step);case UpdateTestStepEvent() when updateTestStep != null:
 return updateTestStep(_that.step);case DeleteTestStepEvent() when deleteTestStep != null:
 return deleteTestStep(_that.stepId,_that.testCaseId);case ReorderTestStepsEvent() when reorderTestSteps != null:
-return reorderTestSteps(_that.reorderedSteps);case _:
+return reorderTestSteps(_that.reorderedSteps,_that.testCaseId);case _:
   return null;
 
 }
@@ -459,7 +459,7 @@ as String,
 
 
 class ReorderTestStepsEvent implements TestStepEvent {
-  const ReorderTestStepsEvent({required final  List<TestStepEntity> reorderedSteps}): _reorderedSteps = reorderedSteps;
+  const ReorderTestStepsEvent({required final  List<TestStepEntity> reorderedSteps, required this.testCaseId}): _reorderedSteps = reorderedSteps;
   
 
  final  List<TestStepEntity> _reorderedSteps;
@@ -469,6 +469,7 @@ class ReorderTestStepsEvent implements TestStepEvent {
   return EqualUnmodifiableListView(_reorderedSteps);
 }
 
+ final  String testCaseId;
 
 /// Create a copy of TestStepEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -480,16 +481,16 @@ $ReorderTestStepsEventCopyWith<ReorderTestStepsEvent> get copyWith => _$ReorderT
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReorderTestStepsEvent&&const DeepCollectionEquality().equals(other._reorderedSteps, _reorderedSteps));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ReorderTestStepsEvent&&const DeepCollectionEquality().equals(other._reorderedSteps, _reorderedSteps)&&(identical(other.testCaseId, testCaseId) || other.testCaseId == testCaseId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_reorderedSteps));
+int get hashCode => Object.hash(runtimeType,const DeepCollectionEquality().hash(_reorderedSteps),testCaseId);
 
 @override
 String toString() {
-  return 'TestStepEvent.reorderTestSteps(reorderedSteps: $reorderedSteps)';
+  return 'TestStepEvent.reorderTestSteps(reorderedSteps: $reorderedSteps, testCaseId: $testCaseId)';
 }
 
 
@@ -500,7 +501,7 @@ abstract mixin class $ReorderTestStepsEventCopyWith<$Res> implements $TestStepEv
   factory $ReorderTestStepsEventCopyWith(ReorderTestStepsEvent value, $Res Function(ReorderTestStepsEvent) _then) = _$ReorderTestStepsEventCopyWithImpl;
 @useResult
 $Res call({
- List<TestStepEntity> reorderedSteps
+ List<TestStepEntity> reorderedSteps, String testCaseId
 });
 
 
@@ -517,10 +518,11 @@ class _$ReorderTestStepsEventCopyWithImpl<$Res>
 
 /// Create a copy of TestStepEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? reorderedSteps = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? reorderedSteps = null,Object? testCaseId = null,}) {
   return _then(ReorderTestStepsEvent(
 reorderedSteps: null == reorderedSteps ? _self._reorderedSteps : reorderedSteps // ignore: cast_nullable_to_non_nullable
-as List<TestStepEntity>,
+as List<TestStepEntity>,testCaseId: null == testCaseId ? _self.testCaseId : testCaseId // ignore: cast_nullable_to_non_nullable
+as String,
   ));
 }
 

@@ -24,5 +24,6 @@ sealed class TestStepEvent with _$TestStepEvent {
 
   const factory TestStepEvent.reorderTestSteps({
     required List<TestStepEntity> reorderedSteps,
+    required String testCaseId,
   }) = ReorderTestStepsEvent;
 }

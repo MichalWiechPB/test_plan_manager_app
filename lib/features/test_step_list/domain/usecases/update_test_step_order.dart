@@ -14,3 +14,7 @@ class UpdateTestStepOrder {
     return repository.updateTestStepOrder(steps);
   }
 }
+class UpdateTestStepOrderParams {
+  final List<TestStepEntity> steps;
+  UpdateTestStepOrderParams(this.steps);
+}

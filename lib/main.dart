@@ -8,7 +8,6 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
 
-  // czyścimy storage z DI, nie tworzymy nowej instancji!
   await GetIt.I<FlutterSecureStorage>().deleteAll();
   runApp(const MyApp());
 }

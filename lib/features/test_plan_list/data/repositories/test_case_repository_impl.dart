@@ -16,43 +16,44 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
   });
 
   @override
-  Future<Either<Failure, List<TestCaseEntity>>> getCasesForPlan(String planId) async {
-    final rowsResult = await local.getCasesForPlan(planId);
+  Stream<Either<Failure, List<TestCaseEntity>>> getCasesForPlan(String planId) async* {
+    final localResult = await local.getCasesForPlan(planId);
+    if (localResult.isRight()) {
+      yield Right(
+        localResult
+            .getOrElse(() => [])
+            .map((row) => row.toEntity())
+            .toList(),
+      );
+    }
 
-    return rowsResult.fold(
-          (failure) => Left(failure),
-          (rows) => Right(rows.map((e) => e.toEntity()).toList()),
-    );
+    try {
+      final remoteDtos = await remote.fetchTestCasesForPlan(planId);
+      for (final dto in remoteDtos) {
+        await local.upsertTestCase(dto.toDbModel());
+      }
+      final refreshed = await local.getCasesForPlan(planId);
+      yield refreshed.map((rows) => rows.map((e) => e.toEntity()).toList());
+    } catch (e) {
+      yield Left(DatabaseFailure("Błąd pobierania z remote: $e"));
+    }
   }
 
   @override
   Future<Either<Failure, void>> createTestCase(TestCaseEntity testCase) async {
-    try {
-      await local.upsertTestCase(testCase.toDbModel());
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure("Błąd createTestCase: $e"));
-    }
+    final result = await local.createTestCase(testCase.toDbModel());
+    return result;
   }
 
   @override
   Future<Either<Failure, void>> updateTestCase(TestCaseEntity testCase) async {
-    try {
-      await local.upsertTestCase(testCase.toDbModel());
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure("Błąd updateTestCase: $e"));
-    }
+    final result = await local.updateTestCase(testCase.toDbModel());
+    return result;
   }
 
   @override
   Future<Either<Failure, void>> deleteTestCase(String id) async {
-    try {
-      await local.deleteTestCase(id);
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure("Błąd deleteTestCase: $e"));
-    }
+    return local.deleteTestCase(id);
   }
 
   @override
@@ -62,11 +63,6 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
       int passedSteps,
       String status,
       ) async {
-    try {
-      await local.updateStepsAndStatus(id, totalSteps, passedSteps, status);
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure("Błąd updateStepsAndStatus: $e"));
-    }
+    return local.updateStepsAndStatus(id, totalSteps, passedSteps, status);
   }
 }

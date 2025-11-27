@@ -36,19 +36,27 @@ class TestCaseDto {
   factory TestCaseDto.fromGraphJson(Map<String, dynamic> json) {
     final fields = json['fields'] ?? {};
 
+    int? _toInt(val) {
+      if (val == null) return null;
+      if (val is int) return val;
+      if (val is double) return val.toInt();
+      if (val is String) return int.tryParse(val);
+      return null;
+    }
+
     return TestCaseDto(
-      id: json['id'],
-      planId: fields['planId'] ?? '',
+      id: json['id'] as String,
+      planId: fields['planId'] as String? ?? '',
       title: fields['Title'] ?? fields['title'] ?? '',
-      status: fields['status'],
-      assignedToUserId: fields['assignedToUserId'],
-      expectedResult: fields['expectedResult'],
+      status: fields['status'] as String?,
+      assignedToUserId: fields['assignedToUserId'] as String?,
+      expectedResult: fields['expectedResult'] as String?,
       lastModifiedUtc: fields['lastModifiedUtc'] != null
           ? DateTime.parse(fields['lastModifiedUtc'])
           : null,
-      parentCaseId: fields['parentCaseId'],
-      totalSteps: fields['totalSteps'] ?? 0,
-      passedSteps: fields['passedSteps'] ?? 0,
+      parentCaseId: fields['parentCaseId'] as String?,
+      totalSteps: _toInt(fields['totalSteps']) ?? 0,
+      passedSteps: _toInt(fields['passedSteps']) ?? 0,
     );
   }
 

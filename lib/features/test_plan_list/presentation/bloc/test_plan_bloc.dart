@@ -1,4 +1,8 @@
+import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:dartz/dartz.dart';
+import 'package:test_plan_manager_app/core/error/failures.dart';
+import 'package:test_plan_manager_app/features/test_plan_list/domain/entities/test_case.dart';
 import '../../domain/usecases/create_test_case.dart';
 import '../../domain/usecases/update_test_case.dart';
 import '../../domain/usecases/delete_test_case.dart';
@@ -11,6 +15,9 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
   final CreateTestCase createTestCase;
   final UpdateTestCase updateTestCase;
   final DeleteTestCase deleteTestCase;
+
+  StreamSubscription<Either<Failure, List<TestCaseEntity>>>?
+  _testCasesSubscription;
 
   TestPlanBloc({
     required this.getTestCasesForPlan,
@@ -30,23 +37,25 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       ) async {
     emit(const TestPlanState.loading());
 
-    (await getTestCasesForPlan(PlanIdParams(event.planId))).fold(
-          (failure) => emit(
-        TestPlanState.failure(
+    await emit.forEach(
+      getTestCasesForPlan(PlanIdParams(event.planId)),
+      onData: (either) => either.fold(
+            (failure) => TestPlanState.failure(
           errorMessage: failure.message ?? 'Wystąpił nieznany błąd',
         ),
-      ),
-          (cases) => emit(
-        TestPlanState.success(testCases: cases),
+            (cases) => TestPlanState.success(testCases: cases),
       ),
     );
   }
+
 
   Future<void> _onCreateTestCase(
       CreateTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    await createTestCase(CreateTestCaseParams(event.testCase));
+    await createTestCase(
+      CreateTestCaseParams(event.testCase),
+    );
 
     add(
       TestPlanEvent.getTestCasesForPlan(
@@ -59,7 +68,9 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       UpdateTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    await updateTestCase(UpdateTestCaseParams(event.testCase));
+    await updateTestCase(
+      UpdateTestCaseParams(event.testCase),
+    );
 
     add(
       TestPlanEvent.getTestCasesForPlan(
@@ -73,12 +84,13 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       Emitter<TestPlanState> emit,
       ) async {
     final planId = state.maybeWhen(
-      success: (cases) =>
-      cases.isNotEmpty ? cases.first.planId : null,
+      success: (cases) => cases.isNotEmpty ? cases.first.planId : null,
       orElse: () => null,
     );
 
-    await deleteTestCase(DeleteTestCaseParams(event.id));
+    await deleteTestCase(
+      DeleteTestCaseParams(event.id),
+    );
 
     if (planId != null) {
       add(
@@ -87,5 +99,11 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
         ),
       );
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _testCasesSubscription?.cancel();
+    return super.close();
   }
 }

@@ -4,6 +4,9 @@ import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:test_plan_manager_app/database/datasources/auth/auth.dart';
+import 'package:test_plan_manager_app/database/datasources/teststep/local/teststep_local_datasource_impl.dart';
+import 'package:test_plan_manager_app/database/datasources/teststep/remote/teststep_remote_datasource.dart';
+import 'package:test_plan_manager_app/database/datasources/teststep/remote/teststep_remote_datasource_impl.dart';
 
 // 🌍 GLOBAL
 import '../core/global/file_service/file_service.dart';
@@ -28,6 +31,7 @@ import '../database/datasources/testcase/local/testcase_local_datasource.dart';
 import '../database/datasources/testcase/local/testcase_local_datasource_impl.dart';
 import '../database/datasources/testcase/remote/testcase_remote_datasource.dart';
 import '../database/datasources/testcase/remote/testcase_remote_datasource_impl.dart';
+import '../database/datasources/teststep/local/teststep_local_datasource.dart';
 import '../database/drift_database/data.dart';
 import '../database/daos/comments_dao.dart';
 import '../database/daos/module_dao.dart';
@@ -101,9 +105,9 @@ final sl = GetIt.instance;
 
 Future<void> init() async {
 
-  // ------------------------
-  // DB
-  // ------------------------
+  ///===========================
+  /// DATABASE
+  ///===========================
   final db = AppDatabase();
   sl.registerSingleton<AppDatabase>(db);
 
@@ -114,14 +118,14 @@ Future<void> init() async {
   sl.registerLazySingleton(() => TestStepsDao(db));
   sl.registerLazySingleton(() => CommentsDao(db));
 
-  // ------------------------
-  // PROJECTS
-  // ------------------------
+  ///===========================
+  /// PROJECTS
+  ///===========================
   sl.registerLazySingleton<ProjectLocalDataSource>(
-          () => ProjectLocalDataSourceImpl(sl<ProjectDao>()));
+          () => ProjectLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<ProjectsRemoteDataSource>(
           () => ProjectsRemoteDataSourceImpl(
-        httpClient: sl<Dio>(),
+        httpClient: sl(),
         tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
       ));
 
@@ -135,12 +139,11 @@ Future<void> init() async {
 
   sl.registerFactory(() => ProjectBloc(sl(), sl(), sl(), sl()));
 
-  // ------------------------
-  // MODULES
-  // ------------------------
+  ///===========================
+  /// MODULES
+  ///===========================
   sl.registerLazySingleton<ModuleLocalDataSource>(
-          () => ModuleLocalDataSourceImpl(sl<ModuleDao>(), sl<TestPlansDao>()));
-
+          () => ModuleLocalDataSourceImpl(sl(), sl()));
   sl.registerLazySingleton<ModuleRemoteDataSource>(
           () => ModuleRemoteDataSourceImpl(
         httpClient: sl(),
@@ -174,12 +177,11 @@ Future<void> init() async {
     deleteTestPlan: sl(),
   ));
 
-  // ------------------------
-  // TEST CASES
-  // ------------------------
+  ///===========================
+  /// TEST CASE
+  ///===========================
   sl.registerLazySingleton<TestCaseLocalDataSource>(
-          () => TestCaseLocalDataSourceImpl(sl<TestCasesDao>()));
-
+          () => TestCaseLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<TestCasesRemoteDataSource>(
           () => TestCasesRemoteDataSourceImpl(
         httpClient: sl(),
@@ -201,17 +203,38 @@ Future<void> init() async {
     deleteTestCase: sl(),
   ));
 
-  // ------------------------
-  // TEST STEPS
-  // ------------------------
+  ///===========================
+  /// TEST STEP
+  ///===========================
+  sl.registerLazySingleton<TestStepLocalDataSource>(
+          () => TestStepLocalDataSourceImpl(sl()));
+  sl.registerLazySingleton<TestStepRemoteDataSource>(
+          () => TestStepRemoteDataSourceImpl(
+        httpClient: sl(),
+        tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
+      ));
+
+
   sl.registerLazySingleton<TestStepRepository>(
-          () => TestStepRepositoryImpl(sl()));
+        () => TestStepRepositoryImpl(
+      local: sl<TestStepLocalDataSource>(),
+      remote: sl<TestStepRemoteDataSource>(),
+    ),
+  );
+
 
   sl.registerLazySingleton(() => GetTestStepsForCase(sl()));
   sl.registerLazySingleton(() => CreateTestStep(sl()));
   sl.registerLazySingleton(() => UpdateTestStep(sl()));
   sl.registerLazySingleton(() => DeleteTestStep(sl()));
   sl.registerLazySingleton(() => UpdateTestStepOrder(sl()));
+
+  sl.registerLazySingleton(
+        () => RecalculateTestCaseProgress(
+      stepRepo: sl<TestStepRepository>(),
+      caseRepo: sl<TestCaseRepository>(),
+    ),
+  );
 
   sl.registerFactory(() => TestStepBloc(
     getTestStepsForCase: sl(),
@@ -222,12 +245,10 @@ Future<void> init() async {
     recalcProgress: sl(),
   ));
 
-  // ------------------------
-  // COMMENTS
-  // ------------------------
-  sl.registerLazySingleton<CommentRepository>(
-          () => CommentRepositoryImpl(sl()));
-
+  ///===========================
+  /// COMMENTS
+  ///===========================
+  sl.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl(sl()));
   sl.registerLazySingleton(() => GetCommentsForCase(sl()));
   sl.registerLazySingleton(() => AddComment(sl()));
   sl.registerLazySingleton(() => DeleteComment(sl()));
@@ -238,9 +259,9 @@ Future<void> init() async {
     deleteComment: sl(),
   ));
 
-  // ------------------------
-  // TEST EXECUTION
-  // ------------------------
+  ///===========================
+  /// TEST EXECUTION
+  ///===========================
   sl.registerLazySingleton<TestExecutionRepository>(
           () => TestExecutionRepositoryImpl(
         projectDao: sl(),
@@ -251,14 +272,10 @@ Future<void> init() async {
         fileService: sl(),
       ));
 
-  sl.registerLazySingleton(
-          () => GetAllProjectsForTestsUseCase(sl()));
-  sl.registerLazySingleton(
-          () => GetProjectStructure(sl()));
-  sl.registerLazySingleton(
-          () => UpdateStepTempStatus(sl()));
-  sl.registerLazySingleton(
-          () => ExportToFile(sl()));
+  sl.registerLazySingleton(() => GetAllProjectsForTestsUseCase(sl()));
+  sl.registerLazySingleton(() => GetProjectStructure(sl()));
+  sl.registerLazySingleton(() => UpdateStepTempStatus(sl()));
+  sl.registerLazySingleton(() => ExportToFile(sl()));
 
   sl.registerFactory(() => TestExecutionBloc(
     getAllProjectsUseCase: sl(),
@@ -267,22 +284,31 @@ Future<void> init() async {
     exportToFile: sl(),
   ));
 
-  // ------------------------
-  // NAVIGATION
-  // ------------------------
+  ///===========================
+  /// NAVIGATION
+  ///===========================
   sl.registerLazySingleton<NavigationRepository>(() => NavigationRepositoryImpl());
   sl.registerLazySingleton(() => SaveVisitedModules(sl()));
   sl.registerLazySingleton(() => GetVisitedModules(sl()));
 
+  ///===========================
+  /// UTILS
+  ///===========================
   sl.registerLazySingleton<FileService>(() => FileService());
   sl.registerLazySingleton<Directory>(() => Directory.current);
 
-  // ------------------------
-  // AUTH
-  // ------------------------
+  ///===========================
+  /// AUTH
+  ///===========================
   sl.registerLazySingleton<PkceService>(() => PkceService());
   sl.registerLazySingleton<FlutterSecureStorage>(() => const FlutterSecureStorage());
-  sl.registerLazySingleton<Dio>(() => Dio());
+
+  sl.registerLazySingleton<Dio>(() => Dio(
+    BaseOptions(
+      connectTimeout: const Duration(seconds: 10),
+      receiveTimeout: const Duration(seconds: 10),
+    ),
+  ));
 
   sl.registerLazySingleton<AuthRemoteDataSource>(
           () => AuthRemoteDataSourceImpl(sl()));
@@ -294,12 +320,10 @@ Future<void> init() async {
         secureStorage: sl(),
       ));
 
-  sl.registerLazySingleton(
-          () => LoginUseCase(sl()));
+  sl.registerLazySingleton(() => LoginUseCase(sl()));
 
-  sl.registerFactory(
-          () => AuthBloc(
-        authRepository: sl(),
-        loginUseCase: sl(),
-      ));
+  sl.registerFactory(() => AuthBloc(
+    authRepository: sl(),
+    loginUseCase: sl(),
+  ));
 }

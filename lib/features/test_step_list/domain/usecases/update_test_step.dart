@@ -14,3 +14,7 @@ class UpdateTestStep implements UseCase<void, TestStepEntity> {
     return repository.updateTestStep(step);
   }
 }
+class UpdateTestStepParams {
+  final TestStepEntity step;
+  UpdateTestStepParams(this.step);
+}

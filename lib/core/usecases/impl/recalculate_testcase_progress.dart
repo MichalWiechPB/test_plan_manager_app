@@ -5,8 +5,8 @@ import '../../../features/test_plan_list/domain/repositories/test_case_repositor
 import '../../error/failures.dart';
 
 class RecalculateTestCaseProgress {
-  final TestStepRepository stepRepo;      // do pobrania kroków
-  final TestCaseRepository caseRepo;      // do update test case
+  final TestStepRepository stepRepo;
+  final TestCaseRepository caseRepo;
 
   RecalculateTestCaseProgress({
     required this.stepRepo,
@@ -14,13 +14,14 @@ class RecalculateTestCaseProgress {
   });
 
   Future<Either<Failure, void>> call(String testCaseId) async {
-    final stepsResult = await stepRepo.getTestStepsForCase(testCaseId);
+    final stepsStream = stepRepo.getStepsForCase(testCaseId);
 
-    return await stepsResult.fold(
+    final stepsResult = await stepsStream.first;
+
+    return stepsResult.fold(
           (failure) => Left(failure),
           (steps) async {
         if (steps.isEmpty) {
-          // brak kroków — ustaw NotRun
           return await caseRepo.updateStepsAndStatus(
             testCaseId,
             0,

@@ -21,13 +21,13 @@ import '../../features/module_list/presentation/pages/module_list_page.dart';
 import '../../features/project_list/presentation/bloc/project_bloc.dart';
 import '../../features/project_list/presentation/bloc/project_event.dart';
 import '../../features/project_list/presentation/pages/project_list_page.dart';
-import '../../features/test_step_list/presentation/pages/test_cases_page.dart';
 
 // EXECUTION
 import '../../features/test_execution/presentation/bloc/test_execution_bloc.dart';
 import '../../features/test_execution/presentation/bloc/test_execution_event.dart';
 import '../../features/test_execution/presentation/pages/execution_page.dart';
 import '../../features/test_plan_list/presentation/pages/test_plan_list_page.dart';
+import '../../features/test_step_list/presentation/pages/test_steps_page.dart';
 
 final GoRouter router = GoRouter(
   initialLocation: '/start',

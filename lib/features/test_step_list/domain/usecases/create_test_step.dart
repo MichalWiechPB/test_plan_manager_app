@@ -14,3 +14,7 @@ class CreateTestStep implements UseCase<void, TestStepEntity> {
     return repository.createTestStep(step);
   }
 }
+class CreateTestStepParams {
+  final TestStepEntity step;
+  CreateTestStepParams(this.step);
+}

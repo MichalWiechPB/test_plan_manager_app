@@ -445,15 +445,15 @@ class AppDatabase extends _$AppDatabase {
             lastModifiedUtc: Value(now),
           ));
 
-          for (var stepIndex = 1; stepIndex <= 4; stepIndex++) {
-            allSteps.add(TestStepsCompanion.insert(
-              id: 'step_${caseId}_$stepIndex',
-              testCaseId: caseId,
-              stepNumber: stepIndex,
-              description: 'Krok $stepIndex w teście $caseId',
-              expected: Value('Oczekiwany rezultat kroku $stepIndex'),
-            ));
-          }
+          // for (var stepIndex = 1; stepIndex <= 4; stepIndex++) {
+          //   allSteps.add(TestStepsCompanion.insert(
+          //     id: 'step_${caseId}_$stepIndex',
+          //     testCaseId: caseId,
+          //     stepNumber: stepIndex,
+          //     description: 'Krok $stepIndex w teście $caseId',
+          //     expected: Value('Oczekiwany rezultat kroku $stepIndex'),
+          //   ));
+          // }
         }
       }
 

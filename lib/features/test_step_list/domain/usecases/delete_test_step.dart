@@ -13,3 +13,7 @@ class DeleteTestStep implements UseCase<void, String> {
     return repository.deleteTestStep(id);
   }
 }
+class DeleteTestStepParams {
+  final String id;
+  DeleteTestStepParams(this.id);
+}
