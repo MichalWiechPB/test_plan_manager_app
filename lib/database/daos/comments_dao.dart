@@ -15,8 +15,12 @@ class CommentsDao extends DatabaseAccessor<AppDatabase> with _$CommentsDaoMixin 
         .get();
   }
 
-  Future<void> insertComment(CommentsCompanion comment) =>
-      into(db.comments).insert(comment);
+  Future<void> upsertComment(CommentsCompanion model) {
+    return into(db.comments).insert(
+      model,
+      onConflict: DoUpdate((_) => model),
+    );
+  }
 
   Future<void> deleteComment(String id) async =>
       (delete(db.comments)..where((tbl) => tbl.id.equals(id))).go();

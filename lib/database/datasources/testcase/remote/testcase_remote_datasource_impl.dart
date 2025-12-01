@@ -42,16 +42,17 @@ class TestCasesRemoteDataSourceImpl implements TestCasesRemoteDataSource {
     );
 
     final List data = res.data["value"];
-    final dtos = data.map((e) => TestCaseDto.fromGraphJson(e)).toList();
-
-    return dtos.where((c) => c.planId == planId).toList();
+    return data
+        .map((e) => TestCaseDto.fromGraphJson(e))
+        .where((dto) => dto.planId == planId)
+        .toList();
   }
 
   @override
   Future<TestCaseDto> createTestCase(TestCaseDto dto) async {
     final token = await tokenProvider();
 
-    final response = await httpClient.post(
+    final res = await httpClient.post(
       _itemsUrl,
       options: Options(
         headers: {
@@ -61,39 +62,41 @@ class TestCasesRemoteDataSourceImpl implements TestCasesRemoteDataSource {
       ),
       data: dto.toGraphCreateJson(),
     );
+    print("📦 GRAPH CREATE CASE response:");
+    print(res.statusCode);
+    print(res.data);
 
-    return TestCaseDto.fromGraphJson(response.data);
+    return TestCaseDto.fromGraphJson(res.data);
   }
 
   @override
   Future<TestCaseDto> updateTestCase(TestCaseDto dto) async {
     final token = await tokenProvider();
-    final id = dto.id!;
 
-    await httpClient.patch(
-      _updateUrl(id),
-      data: dto.toGraphUpdateJson(),
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-          "If-Match": "*",
-        },
-      ),
-    );
+    if (dto.id == null) {
+      throw Exception("TestCaseDto.id cannot be null for update");
+    }
 
-    final refreshed = await httpClient.get(
-      "https://graph.microsoft.com/v1.0/sites/$_siteId/lists/$_testCasesListId/items/$id?expand=fields",
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-        },
-      ),
-    );
+    try {
+      final res = await httpClient.patch(
+        _updateUrl(dto.id!),
+        data: dto.toGraphUpdateJson(),
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Content-Type": "application/json",
+            "If-Match": "*",
+          },
+        ),
+      );
 
-    return TestCaseDto.fromGraphJson(refreshed.data);
+      return TestCaseDto.fromGraphFieldsJson(res.data, dto);
+    } catch (e) {
+      print("UPDATE CASE FAILED ❌");
+      print("ERROR: $e");
+      rethrow;
+    }
   }
-
 
   @override
   Future<void> deleteTestCase(String id) async {

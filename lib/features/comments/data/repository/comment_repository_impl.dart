@@ -1,57 +1,82 @@
 import 'package:dartz/dartz.dart';
-import 'package:drift/drift.dart' as drift;
 import '../../../../core/error/failures.dart';
-import '../../../../database/daos/comments_dao.dart';
-import '../../../../database/drift_database/data.dart';
+import '../../../../database/datasources/comments/local/comment_local_datasource.dart';
+import '../../../../database/datasources/comments/remote/comment_remote_datasource.dart';
+import '../../../../database/drift_database/mappers/comment_mapper.dart';
 import '../../domain/entities/comment.dart';
 import '../../domain/repository/comment_repository.dart';
 
 class CommentRepositoryImpl implements CommentRepository {
-  final CommentsDao dao;
-  CommentRepositoryImpl(this.dao);
+  final CommentsLocalDataSource local;
+  final CommentsRemoteDataSource remote;
+
+  CommentRepositoryImpl({
+    required this.local,
+    required this.remote,
+  });
 
   @override
-  Future<Either<Failure, List<CommentEntity>>> getCommentsForCase(String testCaseId) async {
+  Stream<Either<Failure, List<CommentEntity>>> getCommentsForCase(String testCaseId) async* {
+    final localResult = await local.getCommentsForCase(testCaseId);
+
+    if (localResult.isRight()) {
+      yield Right(
+        localResult.getOrElse(() => [])
+            .map((row) => row.toEntity())
+            .toList(),
+      );
+    }
+
     try {
-      final rows = await dao.getCommentsForCase(testCaseId);
-      final result = rows
-          .map((r) => CommentEntity(
-        id: r.id,
-        testCaseId: r.testCaseId,
-        content: r.content,
-        createdByUserId: r.createdByUserId,
-        createdAtUtc: r.createdAtUtc,
-      ))
-          .toList();
-      return Right(result);
-    } catch (e) {
-      return Left(DatabaseFailure('Błąd pobierania komentarzy: $e'));
+      final remoteDtos = await remote.fetchCommentsForCase(testCaseId);
+
+      for (final dto in remoteDtos) {
+        await local.upsertComment(dto.toDbModel());
+      }
+
+      final refreshed = await local.getCommentsForCase(testCaseId);
+
+      yield refreshed.map(
+            (rows) => rows.map((r) => r.toEntity()).toList(),
+      );
+    } catch (_) {
+      yield Left(DatabaseFailure("Nie udało się pobrać komentarzy z serwera."));
     }
   }
 
   @override
-  Future<Either<Failure, void>> addComment(CommentEntity comment) async {
+  Future<Either<Failure, CommentEntity>> addComment(CommentEntity entity) async {
     try {
-      await dao.insertComment(CommentsCompanion.insert(
-        id: comment.id,
-        testCaseId: comment.testCaseId,
-        content: comment.content,
-        createdByUserId: drift.Value(comment.createdByUserId),
-        createdAtUtc: drift.Value(comment.createdAtUtc ?? DateTime.now().toUtc()),
-      ));
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure('Nie udało się dodać komentarza: $e'));
+      final dto = entity.toDto();
+      final createdDto = await remote.createComment(dto);
+      await local.upsertComment(createdDto.toDbModel());
+      return Right(createdDto.toEntity());
+    } catch (_) {
+      return Left(DatabaseFailure("Nie udało się utworzyć komentarza."));
     }
   }
 
   @override
-  Future<Either<Failure, void>> deleteComment(String commentId) async {
+  Future<Either<Failure, CommentEntity>> updateComment(CommentEntity entity) async {
     try {
-      await dao.deleteComment(commentId);
-      return const Right(null);
-    } catch (e) {
-      return Left(DatabaseFailure('Nie udało się usunąć komentarza: $e'));
+      final dto = entity.toDto();
+      final updatedDto = await remote.updateComment(dto);
+      await local.upsertComment(updatedDto.toDbModel());
+      return Right(updatedDto.toEntity());
+    } catch (_) {
+      return Left(DatabaseFailure("Nie udało się zaktualizować komentarza."));
     }
+  }
+
+  @override
+  Future<Either<Failure, void>> deleteComment(String id) async {
+    try {
+      await remote.deleteComment(id);
+      await local.deleteComment(id);
+      return const Right(null);
+    } catch (e, s) {
+      return Left(DatabaseFailure(e.toString()));
+    }
+
   }
 }

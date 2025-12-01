@@ -18,7 +18,13 @@ class AddCommentEvent extends CommentEvent {
 }
 
 class DeleteCommentEvent extends CommentEvent {
-  final String commentId;
+  final String id;
   final String testCaseId;
-  const DeleteCommentEvent(this.commentId, this.testCaseId);
+
+  const DeleteCommentEvent({
+    required this.id,
+    required this.testCaseId,
+  });
 }
+
+

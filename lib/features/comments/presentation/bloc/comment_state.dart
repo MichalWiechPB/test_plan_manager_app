@@ -1,36 +1,19 @@
-import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 import '../../domain/entities/comment.dart';
 
-enum CommentStatus { initial, loading, success, failure }
+part 'comment_state.freezed.dart';
 
-class CommentState extends Equatable {
-  final CommentStatus status;
-  final List<CommentEntity> comments;
-  final String? errorMessage;
+@freezed
+sealed class CommentState with _$CommentState {
+  const factory CommentState.initial() = CommentInitial;
 
-  const CommentState({
-    required this.status,
-    required this.comments,
-    this.errorMessage,
-  });
+  const factory CommentState.loading() = CommentLoading;
 
-  const CommentState.initial()
-      : status = CommentStatus.initial,
-        comments = const [],
-        errorMessage = null;
+  const factory CommentState.success({
+    required List<CommentEntity> comments,
+  }) = CommentSuccess;
 
-  CommentState copyWith({
-    CommentStatus? status,
-    List<CommentEntity>? comments,
-    String? errorMessage,
-  }) {
-    return CommentState(
-      status: status ?? this.status,
-      comments: comments ?? this.comments,
-      errorMessage: errorMessage ?? this.errorMessage,
-    );
-  }
-
-  @override
-  List<Object?> get props => [status, comments, errorMessage];
+  const factory CommentState.failure({
+    required String errorMessage,
+  }) = CommentFailure;
 }

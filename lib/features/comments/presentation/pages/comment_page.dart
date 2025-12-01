@@ -15,13 +15,27 @@ class CommentPage extends StatefulWidget {
 }
 
 class _CommentPageState extends State<CommentPage> {
+  late final CommentBloc _bloc;
   final _controller = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _bloc = di.sl<CommentBloc>();
+    _bloc.add(GetCommentsForCaseEvent(widget.testCaseId));
+  }
+
+  @override
+  void dispose() {
+    _bloc.close();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) =>
-      di.sl<CommentBloc>()..add(GetCommentsForCaseEvent(widget.testCaseId)),
+    return BlocProvider.value(
+      value: _bloc,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Komentarze'),
@@ -32,47 +46,47 @@ class _CommentPageState extends State<CommentPage> {
         ),
         body: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(12.0),
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 Expanded(
                   child: BlocBuilder<CommentBloc, CommentState>(
-                    builder: (context, state) {
-                      if (state.status == CommentStatus.loading) {
-                        return const Center(child: CircularProgressIndicator());
-                      }
+                    builder: (_, state) {
+                      return state.when(
+                        initial: () => const Center(child: Text("Wczytywanie...")),
+                        loading: () => const Center(child: CircularProgressIndicator()),
+                        failure: (msg) => Center(
+                          child: Text(msg, style: const TextStyle(color: Colors.red)),
+                        ),
+                        success: (comments) {
+                          if (comments.isEmpty) {
+                            return const Center(child: Text("Brak komentarzy"));
+                          }
 
-                      final comments = state.comments;
-                      if (comments.isEmpty) {
-                        return const Center(
-                            child: Text('Brak komentarzy dla tego testu'));
-                      }
-
-                      return ListView.builder(
-                        itemCount: comments.length,
-                        itemBuilder: (context, i) {
-                          final c = comments[i];
-                          return Card(
-                            margin: const EdgeInsets.symmetric(vertical: 6),
-                            child: ListTile(
-                              title: Text(c.content),
-                              subtitle: Text(
-                                c.createdAtUtc
-                                    ?.toLocal()
-                                    .toString()
-                                    .split('.')[0] ??
-                                    '',
-                                style: const TextStyle(
-                                    fontSize: 12, color: Colors.grey),
-                              ),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete_outline),
-                                onPressed: () {
-                                  context.read<CommentBloc>().add(
-                                      DeleteCommentEvent(c.id, c.testCaseId));
-                                },
-                              ),
-                            ),
+                          return ListView.builder(
+                            itemCount: comments.length,
+                            itemBuilder: (_, i) {
+                              final c = comments[i];
+                              return Card(
+                                child: ListTile(
+                                  title: Text(c.content),
+                                  subtitle: Text(
+                                    c.createdAtUtc?.toLocal().toString().split('.').first ?? '',
+                                  ),
+                                  trailing: IconButton(
+                                    icon: const Icon(Icons.delete_outline),
+                                    onPressed: () {
+                                      _bloc.add(
+                                        DeleteCommentEvent(
+                                          id: c.id,
+                                          testCaseId: c.testCaseId,
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                ),
+                              );
+                            },
                           );
                         },
                       );
@@ -98,15 +112,15 @@ class _CommentPageState extends State<CommentPage> {
                       onPressed: () {
                         final text = _controller.text.trim();
                         if (text.isEmpty) return;
-                        final newComment = CommentEntity(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
+
+                        final entity = CommentEntity(
+                          id: '',
                           testCaseId: widget.testCaseId,
                           content: text,
                           createdAtUtc: DateTime.now().toUtc(),
                         );
-                        context
-                            .read<CommentBloc>()
-                            .add(AddCommentEvent(newComment));
+
+                        _bloc.add(AddCommentEvent(entity));
                         _controller.clear();
                       },
                     ),

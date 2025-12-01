@@ -4,90 +4,111 @@ part 'test_case_dto.g.dart';
 
 @JsonSerializable()
 class TestCaseDto {
-  final String id;
+  final String? id;
   final String planId;
   final String title;
-  final String? status;
-  final String? assignedToUserId;
+  final String status;
   final String? expectedResult;
+  final String? assignedToUserId;
   final DateTime? lastModifiedUtc;
   final String? parentCaseId;
   final int? totalSteps;
   final int? passedSteps;
 
   const TestCaseDto({
-    required this.id,
+    this.id,
     required this.planId,
     required this.title,
-    this.status,
-    this.assignedToUserId,
+    required this.status,
     this.expectedResult,
+    this.assignedToUserId,
     this.lastModifiedUtc,
     this.parentCaseId,
     this.totalSteps,
     this.passedSteps,
   });
 
-  factory TestCaseDto.fromGraphJson(Map<String, dynamic> json) {
-    final fields = json['fields'] ?? {};
+  factory TestCaseDto.fromJson(Map<String, dynamic> json) =>
+      _$TestCaseDtoFromJson(json);
+  Map<String, dynamic> toJson() => _$TestCaseDtoToJson(this);
 
-    int? _toInt(val) {
-      if (val == null) return null;
-      if (val is int) return val;
-      if (val is double) return val.toInt();
-      if (val is String) return int.tryParse(val);
-      return null;
-    }
+  factory TestCaseDto.fromGraphJson(Map<String, dynamic> json) {
+    final fields = (json['fields'] as Map<String, dynamic>? ?? {});
 
     return TestCaseDto(
-      id: fields['id0'] ?? json['id'],
+      id: json['id']?.toString(),
       planId: fields['planId'] ?? '',
-      title: fields['title0'] ?? '',
-      status: fields['status'],
-      assignedToUserId: fields['assignedToUserId'],
+      title: fields['Title'] ?? fields['title0'] ?? '',   // <-- TU
+      status: fields['status'] ?? '',
       expectedResult: fields['expectedResult'],
+      assignedToUserId: fields['assignedToUserId'],
       parentCaseId: fields['parentCaseId'],
+      totalSteps: _parseInt(fields['totalSteps']),
+      passedSteps: _parseInt(fields['passedSteps']),
       lastModifiedUtc: fields['lastModifiedUtc'] != null
-          ? DateTime.parse(fields['lastModifiedUtc'])
+          ? DateTime.parse(fields['lastModifiedUtc']).toUtc()
           : null,
-      totalSteps: _toInt(fields['totalSteps']) ?? 0,
-      passedSteps: _toInt(fields['passedSteps']) ?? 0,
     );
   }
 
+  factory TestCaseDto.fromGraphFieldsJson(
+      Map<String, dynamic> json,
+      TestCaseDto original,
+      ) {
+    final fields = json['fields'] as Map<String, dynamic>?;
+
+    return TestCaseDto(
+      id: json['id']?.toString() ?? original.id,
+      planId: fields?['PlanId'] ?? original.planId,
+      title: fields?['Title'] ?? fields?['title0'] ?? original.title,
+      status: fields?['Status'] ?? original.status,
+      expectedResult: fields?['ExpectedResult'] ?? original.expectedResult,
+      assignedToUserId:
+      fields?['AssignedToUserId'] ?? original.assignedToUserId,
+      parentCaseId: fields?['ParentCaseId'] ?? original.parentCaseId,
+      totalSteps: fields?['TotalSteps'] != null
+          ? _parseInt(fields?['TotalSteps'])
+          : original.totalSteps,
+      passedSteps: fields?['PassedSteps'] != null
+          ? _parseInt(fields?['PassedSteps'])
+          : original.passedSteps,
+      lastModifiedUtc: fields?['LastModifiedUtc'] != null
+          ? DateTime.parse(fields?['LastModifiedUtc']).toUtc()
+          : original.lastModifiedUtc,
+    );
+  }
 
   Map<String, dynamic> toGraphCreateJson() {
     return {
       "fields": {
-        "id0": id,
-        "planId": planId,
         "title0": title,
+        "planId": planId,
         "status": status,
-        "assignedToUserId": assignedToUserId,
-        "expectedResult": expectedResult,
-        "parentCaseId": parentCaseId,
-        "lastModifiedUtc": lastModifiedUtc?.toIso8601String(),
-        "totalSteps": totalSteps ?? 0,
-        "passedSteps": passedSteps ?? 0,
       }
     };
   }
 
 
+  /// PATCH (jak TestStep)
   Map<String, dynamic> toGraphUpdateJson() {
-    final map = <String, dynamic>{};
+    return {
+      "PlanId": planId,
+      "Title": title,
+      "Status": status,
+      "ExpectedResult": expectedResult,
+      "AssignedToUserId": assignedToUserId,
+      "ParentCaseId": parentCaseId,
+      "TotalSteps": totalSteps,
+      "PassedSteps": passedSteps,
+      "LastModifiedUtc": lastModifiedUtc?.toUtc().toIso8601String(),
+    };
+  }
 
-    map["title0"] = title;
-    if (status != null) map["status"] = status;
-    if (assignedToUserId != null) map["assignedToUserId"] = assignedToUserId;
-    if (expectedResult != null) map["expectedResult"] = expectedResult;
-    if (parentCaseId != null) map["parentCaseId"] = parentCaseId;
-    if (lastModifiedUtc != null)
-      map["lastModifiedUtc"] = lastModifiedUtc!.toIso8601String();
-    if (totalSteps != null) map["totalSteps"] = totalSteps;
-    if (passedSteps != null) map["passedSteps"] = passedSteps;
-
-    return map;
+  static int? _parseInt(dynamic v) {
+    if (v == null) return null;
+    if (v is int) return v;
+    if (v is double) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
   }
 }
-

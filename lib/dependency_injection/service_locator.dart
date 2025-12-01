@@ -1,9 +1,14 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
 import 'package:test_plan_manager_app/database/datasources/auth/auth.dart';
+import 'package:test_plan_manager_app/database/datasources/comments/local/comment_local_datasource.dart';
+import 'package:test_plan_manager_app/database/datasources/comments/local/comment_local_datasource_impl.dart';
+import 'package:test_plan_manager_app/database/datasources/comments/remote/comment_remote_datasource.dart';
+import 'package:test_plan_manager_app/database/datasources/comments/remote/comment_remote_datasource_impl.dart';
 import 'package:test_plan_manager_app/database/datasources/teststep/local/teststep_local_datasource_impl.dart';
 import 'package:test_plan_manager_app/database/datasources/teststep/remote/teststep_remote_datasource.dart';
 import 'package:test_plan_manager_app/database/datasources/teststep/remote/teststep_remote_datasource_impl.dart';
@@ -248,7 +253,24 @@ Future<void> init() async {
   ///===========================
   /// COMMENTS
   ///===========================
-  sl.registerLazySingleton<CommentRepository>(() => CommentRepositoryImpl(sl()));
+  sl.registerLazySingleton<CommentRepository>(
+        () => CommentRepositoryImpl(
+      local: sl(),
+      remote: sl(),
+    ),
+  );
+  sl.registerLazySingleton<CommentsLocalDataSource>(
+        () => CommentsLocalDataSourceImpl(sl()),
+  );
+
+  sl.registerLazySingleton<CommentsRemoteDataSource>(
+        () => CommentsRemoteDataSourceImpl(
+      httpClient: sl(),
+      tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
+    ),
+  );
+
+
   sl.registerLazySingleton(() => GetCommentsForCase(sl()));
   sl.registerLazySingleton(() => AddComment(sl()));
   sl.registerLazySingleton(() => DeleteComment(sl()));

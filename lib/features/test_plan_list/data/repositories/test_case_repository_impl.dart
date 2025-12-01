@@ -1,6 +1,4 @@
 import 'package:dartz/dartz.dart';
-import 'package:test_plan_manager_app/database/drift_database/data.dart';
-
 import '../../../../core/error/failures.dart';
 import '../../../../database/datasources/testcase/local/testcase_local_datasource.dart';
 import '../../../../database/datasources/testcase/remote/testcase_remote_datasource.dart';
@@ -20,12 +18,10 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
   @override
   Stream<Either<Failure, List<TestCaseEntity>>> getCasesForPlan(String planId) async* {
     final localResult = await local.getCasesForPlan(planId);
+
     if (localResult.isRight()) {
       yield Right(
-        localResult
-            .getOrElse(() => [])
-            .map((row) => row.toEntity())
-            .toList(),
+        localResult.getOrElse(() => []).map((e) => e.toEntity()).toList(),
       );
     }
 
@@ -34,36 +30,49 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
       for (final dto in remoteDtos) {
         await local.upsertTestCase(dto.toDbModel());
       }
+
       final refreshed = await local.getCasesForPlan(planId);
       yield refreshed.map(
             (rows) => rows.map((e) => e.toEntity()).toList(),
       );
     } catch (_) {
-      yield Left(DatabaseFailure("Nie udało się pobrać test case'ów z serwera."));
+      yield Left(
+        DatabaseFailure("Nie udało się pobrać TestCase'ów z serwera."),
+      );
     }
   }
 
   @override
-  Future<Either<Failure, TestCaseEntity>> createTestCase(TestCaseEntity testCase) async {
+  Future<Either<Failure, TestCaseEntity>> createTestCase(
+      TestCaseEntity entity,
+      ) async {
     try {
-      final dto = testCase.toDto();
+      final dto = entity.toDto();
       final createdDto = await remote.createTestCase(dto);
       await local.upsertTestCase(createdDto.toDbModel());
       return Right(createdDto.toEntity());
-    } catch (_) {
-      return Left(DatabaseFailure("Nie udało się utworzyć test case'a."));
+    } catch (e, s) {
+      print("❌ createTestCase repo error:");
+      print(e);
+      print(s);
+      return Left(DatabaseFailure(e.toString()));
     }
+
   }
 
   @override
-  Future<Either<Failure, TestCaseEntity>> updateTestCase(TestCaseEntity testCase) async {
+  Future<Either<Failure, TestCaseEntity>> updateTestCase(
+      TestCaseEntity entity,
+      ) async {
     try {
-      final dto = testCase.toDto();
+      final dto = entity.toDto();
       final updatedDto = await remote.updateTestCase(dto);
       await local.upsertTestCase(updatedDto.toDbModel());
       return Right(updatedDto.toEntity());
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się zaktualizować test case'a."));
+      return Left(
+        DatabaseFailure("Nie udało się zaktualizować TestCase."),
+      );
     }
   }
 
@@ -74,7 +83,9 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
       await local.deleteTestCase(id);
       return const Right(null);
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się usunąć test case'a."));
+      return Left(
+        DatabaseFailure("Nie udało się usunąć TestCase."),
+      );
     }
   }
 
@@ -84,21 +95,12 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
       int totalSteps,
       int passedSteps,
       String status,
-      ) async {
-    try {
-      await local.updateStepsAndStatus(id, totalSteps, passedSteps, status);
-      final dto = TestCase(
-        id: id,
-        planId: "",
-        title: "",
-        status: status,
-        totalSteps: totalSteps,
-        passedSteps: passedSteps,
-      ).toDto();
-      await remote.updateTestCase(dto);
-      return const Right(null);
-    } catch (_) {
-      return Left(DatabaseFailure("Nie udało się zaktualizować kroków test case'a."));
-    }
+      ) {
+    return local.updateStepsAndStatus(
+      id,
+      totalSteps,
+      passedSteps,
+      status,
+    );
   }
 }

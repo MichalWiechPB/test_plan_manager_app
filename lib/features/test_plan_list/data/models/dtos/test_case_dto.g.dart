@@ -7,12 +7,12 @@ part of 'test_case_dto.dart';
 // **************************************************************************
 
 TestCaseDto _$TestCaseDtoFromJson(Map<String, dynamic> json) => TestCaseDto(
-  id: json['id'] as String,
+  id: json['id'] as String?,
   planId: json['planId'] as String,
   title: json['title'] as String,
-  status: json['status'] as String?,
-  assignedToUserId: json['assignedToUserId'] as String?,
+  status: json['status'] as String,
   expectedResult: json['expectedResult'] as String?,
+  assignedToUserId: json['assignedToUserId'] as String?,
   lastModifiedUtc:
       json['lastModifiedUtc'] == null
           ? null
@@ -28,8 +28,8 @@ Map<String, dynamic> _$TestCaseDtoToJson(TestCaseDto instance) =>
       'planId': instance.planId,
       'title': instance.title,
       'status': instance.status,
-      'assignedToUserId': instance.assignedToUserId,
       'expectedResult': instance.expectedResult,
+      'assignedToUserId': instance.assignedToUserId,
       'lastModifiedUtc': instance.lastModifiedUtc?.toIso8601String(),
       'parentCaseId': instance.parentCaseId,
       'totalSteps': instance.totalSteps,

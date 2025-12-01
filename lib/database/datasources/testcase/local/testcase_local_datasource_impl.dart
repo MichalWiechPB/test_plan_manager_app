@@ -14,10 +14,10 @@ class TestCaseLocalDataSourceImpl implements TestCaseLocalDataSource {
   @override
   Future<Either<Failure, List<TestCase>>> getCasesForPlan(String planId) async {
     try {
-      final result = await dao.getCasesForPlan(planId);
-      return Right(result);
+      final data = await dao.getCasesForPlan(planId);
+      return Right(data);
     } catch (e) {
-      return Left(DatabaseFailure("Błąd pobierania test case'ów: $e"));
+      return Left(DatabaseFailure(e.toString()));
     }
   }
 
@@ -27,22 +27,24 @@ class TestCaseLocalDataSourceImpl implements TestCaseLocalDataSource {
   }
 
   @override
-  Future<Either<Failure, void>> createTestCase(TestCasesCompanion testCase) async {
+  Future<Either<Failure, void>> createTestCase(
+      TestCasesCompanion testCase) async {
     try {
       await dao.insertTestCase(testCase);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure("Błąd tworzenia test case: $e"));
+      return Left(DatabaseFailure(e.toString()));
     }
   }
 
   @override
-  Future<Either<Failure, void>> updateTestCase(TestCasesCompanion testCase) async {
+  Future<Either<Failure, void>> updateTestCase(
+      TestCasesCompanion testCase) async {
     try {
       await dao.updateTestCase(testCase);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure("Błąd aktualizacji test case: $e"));
+      return Left(DatabaseFailure(e.toString()));
     }
   }
 
@@ -52,23 +54,27 @@ class TestCaseLocalDataSourceImpl implements TestCaseLocalDataSource {
       await dao.deleteTestCase(id);
       return const Right(null);
     } catch (e) {
-      return Left(DatabaseFailure("Błąd usuwania test case: $e"));
+      return Left(DatabaseFailure(e.toString()));
     }
   }
+
   @override
   Future<Either<Failure, void>> updateStepsAndStatus(
       String id,
-      int total,
-      int passed,
+      int totalSteps,
+      int passedSteps,
       String status,
       ) async {
     try {
-      await dao.updateStepsAndStatus(id, total, passed, status);
+      await dao.updateStepsAndStatus(
+        id,
+        totalSteps,
+        passedSteps,
+        status,
+      );
       return const Right(null);
     } catch (e) {
-      return Left(
-        DatabaseFailure("Błąd updateStepsAndStatus: $e"),
-      );
+      return Left(DatabaseFailure(e.toString()));
     }
   }
 }
