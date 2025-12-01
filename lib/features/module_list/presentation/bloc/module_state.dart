@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
@@ -14,7 +15,7 @@ sealed class ModuleState with _$ModuleState {
     required List<ModuleEntity> modules,
     required Map<String, List<ModuleEntity>> submodules,
     required Map<String, List<TestPlanEntity>> testPlans,
-    required List<String> visitedModules,
+    required List<VisitedModule> visitedModules,
     String? currentProjectId,
     String? projectName,
   }) = ModuleSuccess;

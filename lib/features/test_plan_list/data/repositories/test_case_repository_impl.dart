@@ -17,30 +17,26 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
 
   @override
   Stream<Either<Failure, List<TestCaseEntity>>> getCasesForPlan(String planId) async* {
-    final localResult = await local.getCasesForPlan(planId);
-
-    if (localResult.isRight()) {
-      yield Right(
-        localResult.getOrElse(() => []).map((e) => e.toEntity()).toList(),
-      );
-    }
-
     try {
       final remoteDtos = await remote.fetchTestCasesForPlan(planId);
+
       for (final dto in remoteDtos) {
         await local.upsertTestCase(dto.toDbModel());
       }
 
       final refreshed = await local.getCasesForPlan(planId);
+
       yield refreshed.map(
             (rows) => rows.map((e) => e.toEntity()).toList(),
       );
     } catch (_) {
-      yield Left(
-        DatabaseFailure("Nie udało się pobrać TestCase'ów z serwera."),
+      final fallback = await local.getCasesForPlan(planId);
+      yield fallback.map(
+            (rows) => rows.map((e) => e.toEntity()).toList(),
       );
     }
   }
+
 
   @override
   Future<Either<Failure, TestCaseEntity>> createTestCase(
@@ -52,9 +48,6 @@ class TestCaseRepositoryImpl implements TestCaseRepository {
       await local.upsertTestCase(createdDto.toDbModel());
       return Right(createdDto.toEntity());
     } catch (e, s) {
-      print("❌ createTestCase repo error:");
-      print(e);
-      print(s);
       return Left(DatabaseFailure(e.toString()));
     }
 

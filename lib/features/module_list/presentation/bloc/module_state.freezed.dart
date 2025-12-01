@@ -125,7 +125,7 @@ return failure(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<String> visitedModules,  String? currentProjectId,  String? projectName)?  success,TResult Function( String errorMessage)?  failure,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function()?  initial,TResult Function()?  loading,TResult Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<VisitedModule> visitedModules,  String? currentProjectId,  String? projectName)?  success,TResult Function( String errorMessage)?  failure,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case ModuleInitial() when initial != null:
 return initial();case ModuleLoading() when loading != null:
@@ -149,7 +149,7 @@ return failure(_that.errorMessage);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<String> visitedModules,  String? currentProjectId,  String? projectName)  success,required TResult Function( String errorMessage)  failure,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function()  initial,required TResult Function()  loading,required TResult Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<VisitedModule> visitedModules,  String? currentProjectId,  String? projectName)  success,required TResult Function( String errorMessage)  failure,}) {final _that = this;
 switch (_that) {
 case ModuleInitial():
 return initial();case ModuleLoading():
@@ -169,7 +169,7 @@ return failure(_that.errorMessage);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<String> visitedModules,  String? currentProjectId,  String? projectName)?  success,TResult? Function( String errorMessage)?  failure,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function()?  initial,TResult? Function()?  loading,TResult? Function( List<ModuleEntity> modules,  Map<String, List<ModuleEntity>> submodules,  Map<String, List<TestPlanEntity>> testPlans,  List<VisitedModule> visitedModules,  String? currentProjectId,  String? projectName)?  success,TResult? Function( String errorMessage)?  failure,}) {final _that = this;
 switch (_that) {
 case ModuleInitial() when initial != null:
 return initial();case ModuleLoading() when loading != null:
@@ -251,7 +251,7 @@ String toString() {
 
 
 class ModuleSuccess implements ModuleState {
-  const ModuleSuccess({required final  List<ModuleEntity> modules, required final  Map<String, List<ModuleEntity>> submodules, required final  Map<String, List<TestPlanEntity>> testPlans, required final  List<String> visitedModules, this.currentProjectId, this.projectName}): _modules = modules,_submodules = submodules,_testPlans = testPlans,_visitedModules = visitedModules;
+  const ModuleSuccess({required final  List<ModuleEntity> modules, required final  Map<String, List<ModuleEntity>> submodules, required final  Map<String, List<TestPlanEntity>> testPlans, required final  List<VisitedModule> visitedModules, this.currentProjectId, this.projectName}): _modules = modules,_submodules = submodules,_testPlans = testPlans,_visitedModules = visitedModules;
   
 
  final  List<ModuleEntity> _modules;
@@ -275,8 +275,8 @@ class ModuleSuccess implements ModuleState {
   return EqualUnmodifiableMapView(_testPlans);
 }
 
- final  List<String> _visitedModules;
- List<String> get visitedModules {
+ final  List<VisitedModule> _visitedModules;
+ List<VisitedModule> get visitedModules {
   if (_visitedModules is EqualUnmodifiableListView) return _visitedModules;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_visitedModules);
@@ -315,7 +315,7 @@ abstract mixin class $ModuleSuccessCopyWith<$Res> implements $ModuleStateCopyWit
   factory $ModuleSuccessCopyWith(ModuleSuccess value, $Res Function(ModuleSuccess) _then) = _$ModuleSuccessCopyWithImpl;
 @useResult
 $Res call({
- List<ModuleEntity> modules, Map<String, List<ModuleEntity>> submodules, Map<String, List<TestPlanEntity>> testPlans, List<String> visitedModules, String? currentProjectId, String? projectName
+ List<ModuleEntity> modules, Map<String, List<ModuleEntity>> submodules, Map<String, List<TestPlanEntity>> testPlans, List<VisitedModule> visitedModules, String? currentProjectId, String? projectName
 });
 
 
@@ -338,7 +338,7 @@ modules: null == modules ? _self._modules : modules // ignore: cast_nullable_to_
 as List<ModuleEntity>,submodules: null == submodules ? _self._submodules : submodules // ignore: cast_nullable_to_non_nullable
 as Map<String, List<ModuleEntity>>,testPlans: null == testPlans ? _self._testPlans : testPlans // ignore: cast_nullable_to_non_nullable
 as Map<String, List<TestPlanEntity>>,visitedModules: null == visitedModules ? _self._visitedModules : visitedModules // ignore: cast_nullable_to_non_nullable
-as List<String>,currentProjectId: freezed == currentProjectId ? _self.currentProjectId : currentProjectId // ignore: cast_nullable_to_non_nullable
+as List<VisitedModule>,currentProjectId: freezed == currentProjectId ? _self.currentProjectId : currentProjectId // ignore: cast_nullable_to_non_nullable
 as String?,projectName: freezed == projectName ? _self.projectName : projectName // ignore: cast_nullable_to_non_nullable
 as String?,
   ));

@@ -196,7 +196,7 @@ Future<void> init() async {
   sl.registerLazySingleton<TestCaseRepository>(
           () => TestCaseRepositoryImpl(local: sl(), remote: sl()));
 
-  sl.registerLazySingleton(() => GetTestCasesForPlan(sl()));
+  sl.registerLazySingleton(() => GetTestCasesForPlan(sl(), sl()));
   sl.registerLazySingleton(() => CreateTestCase(sl()));
   sl.registerLazySingleton(() => UpdateTestCase(sl()));
   sl.registerLazySingleton(() => DeleteTestCase(sl()));

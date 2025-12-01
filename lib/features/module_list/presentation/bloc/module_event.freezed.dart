@@ -146,7 +146,7 @@ return deleteTestPlan(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( String projectId)?  navigateBack,TResult Function( String projectId,  List<String> visited)?  setVisitedPath,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module)?  updateModule,TResult Function( String moduleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( String projectId)?  navigateBack,TResult Function( String projectId,  List<VisitedModule> visited)?  setVisitedPath,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module)?  updateModule,TResult Function( String moduleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
@@ -177,7 +177,7 @@ return deleteTestPlan(_that.testPlanId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( String projectId)  navigateBack,required TResult Function( String projectId,  List<String> visited)  setVisitedPath,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module)  updateModule,required TResult Function( String moduleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( String projectId)  navigateBack,required TResult Function( String projectId,  List<VisitedModule> visited)  setVisitedPath,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module)  updateModule,required TResult Function( String moduleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent():
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent():
@@ -204,7 +204,7 @@ return deleteTestPlan(_that.testPlanId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( String projectId)?  navigateBack,TResult? Function( String projectId,  List<String> visited)?  setVisitedPath,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module)?  updateModule,TResult? Function( String moduleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( String projectId)?  navigateBack,TResult? Function( String projectId,  List<VisitedModule> visited)?  setVisitedPath,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module)?  updateModule,TResult? Function( String moduleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
@@ -495,12 +495,12 @@ as String,
 
 
 class SetVisitedPathEvent implements ModuleEvent {
-  const SetVisitedPathEvent({required this.projectId, required final  List<String> visited}): _visited = visited;
+  const SetVisitedPathEvent({required this.projectId, required final  List<VisitedModule> visited}): _visited = visited;
   
 
  final  String projectId;
- final  List<String> _visited;
- List<String> get visited {
+ final  List<VisitedModule> _visited;
+ List<VisitedModule> get visited {
   if (_visited is EqualUnmodifiableListView) return _visited;
   // ignore: implicit_dynamic_type
   return EqualUnmodifiableListView(_visited);
@@ -537,7 +537,7 @@ abstract mixin class $SetVisitedPathEventCopyWith<$Res> implements $ModuleEventC
   factory $SetVisitedPathEventCopyWith(SetVisitedPathEvent value, $Res Function(SetVisitedPathEvent) _then) = _$SetVisitedPathEventCopyWithImpl;
 @useResult
 $Res call({
- String projectId, List<String> visited
+ String projectId, List<VisitedModule> visited
 });
 
 
@@ -558,7 +558,7 @@ class _$SetVisitedPathEventCopyWithImpl<$Res>
   return _then(SetVisitedPathEvent(
 projectId: null == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
 as String,visited: null == visited ? _self._visited : visited // ignore: cast_nullable_to_non_nullable
-as List<String>,
+as List<VisitedModule>,
   ));
 }
 

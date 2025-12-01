@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
 import '../bloc/module_bloc.dart';
 import '../bloc/module_event.dart';
 import '../bloc/module_state.dart';
@@ -45,18 +46,31 @@ class _ModuleTileState extends State<ModuleTile> {
   }
 
   void _openModule(BuildContext context) {
+    final bloc = context.read<ModuleBloc>();
     final m = widget.module;
 
-    context.read<ModuleBloc>().add(
-      ModuleEvent.getSubmodulesForModule(moduleId: m.id),
+    final visited = List<VisitedModule>.from(
+      bloc.state.maybeWhen(
+        success: (_, __, ___, visited, ____, _____) => visited,
+        orElse: () => const [],
+      ),
     );
 
-    final projectName = GoRouterState.of(context).extra as String?;
-    context.go(
-      '/modules/${m.projectId}/sub/${m.id}',
-      extra: projectName,
+    // zapobiega duplikatom
+    if (!visited.any((e) => e.id == m.id)) {
+      visited.add(VisitedModule(m.id, m.name));
+    }
+
+    bloc.add(
+      ModuleEvent.setVisitedPath(
+        projectId: m.projectId,
+        visited: visited,
+      ),
     );
+
+    context.go('/modules/${m.projectId}/sub/${m.id}');
   }
+
 
   @override
   Widget build(BuildContext context) {

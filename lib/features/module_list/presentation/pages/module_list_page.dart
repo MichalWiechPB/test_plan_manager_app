@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+
 import '../bloc/module_bloc.dart';
 import '../bloc/module_state.dart';
 import '../bloc/module_event.dart';
+
 import '../widgets/build_path_bar.dart';
 import '../widgets/module_tile.dart';
 import '../widgets/test_plan_tile.dart';
+
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
@@ -53,7 +57,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
               initial: _renderLoading,
               loading: _renderLoading,
               failure: _renderFailure,
-              success: (modules, sub, plans, visited, currentProjectId, name) {
+              success: (modules, sub, plans, visited, _, __) {
                 return _renderSuccess(
                   context: context,
                   modules: widget.moduleId == null
@@ -62,6 +66,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
                   testPlans: widget.moduleId != null
                       ? (plans[widget.moduleId] ?? const [])
                       : const [],
+                  visited: visited,
                 );
               },
             );
@@ -71,46 +76,16 @@ class _ModuleListPageState extends State<ModuleListPage> {
     );
   }
 
-  Widget _renderLoading() {
-    return const Center(child: CircularProgressIndicator());
-  }
+  Widget _renderLoading() => const Center(child: CircularProgressIndicator());
 
-  Widget _renderFailure(String message) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error, size: 48.0, color: Colors.red),
-            const SizedBox(height: 16.0),
-            Text(
-              message,
-              style: const TextStyle(fontSize: 16.0),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24.0),
-            ElevatedButton(
-              onPressed: () {
-                context.read<ModuleBloc>().add(
-                  ModuleEvent.getModulesForProject(
-                    projectId: widget.projectId,
-                    projectName: widget.projectName,
-                  ),
-                );
-              },
-              child: const Text('Spróbuj ponownie'),
-            )
-          ],
-        ),
-      ),
-    );
-  }
+  Widget _renderFailure(String msg) =>
+      Center(child: Text(msg, style: const TextStyle(fontSize: 16)));
 
   Widget _renderSuccess({
     required BuildContext context,
     required List<ModuleEntity> modules,
     required List<TestPlanEntity> testPlans,
+    required List<VisitedModule> visited,
   }) {
     final filteredModules = modules
         .where((m) => m.name.toLowerCase().contains(searchQuery.toLowerCase()))
@@ -123,28 +98,21 @@ class _ModuleListPageState extends State<ModuleListPage> {
     final empty = filteredModules.isEmpty && filteredPlans.isEmpty;
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        buildPathBar(context, context.read<ModuleBloc>().state, widget.projectId),
+        buildPathBar(context, visited, widget.projectId),
         Padding(
-          padding: const EdgeInsets.fromLTRB(16.0, 12.0, 16.0, 8.0),
+          padding: const EdgeInsets.all(12),
           child: TextField(
             decoration: const InputDecoration(
               labelText: 'Szukaj modułu lub planu testów',
               prefixIcon: Icon(Icons.search),
-              border: OutlineInputBorder(),
             ),
-            onChanged: (value) {
-              setState(() => searchQuery = value);
-            },
+            onChanged: (v) => setState(() => searchQuery = v),
           ),
         ),
-        const Divider(height: 1.0),
         Expanded(
           child: empty
-              ? const Center(
-            child: Text('Brak wyników'),
-          )
+              ? const Center(child: Text('Brak wyników'))
               : ListView(
             children: [
               ...filteredModules.map((m) => ModuleTile(module: m)),
@@ -165,9 +133,10 @@ class _ModuleListPageState extends State<ModuleListPage> {
 
   void _onBackPressed(BuildContext context) {
     final bloc = context.read<ModuleBloc>();
-    final visited = List<String>.from(
+
+    final visited = List<VisitedModule>.from(
       bloc.state.maybeWhen(
-        success: (_, __, ___, visitedModules, ____, _____) => visitedModules,
+        success: (_, __, ___, path, ____, _____) => path,
         orElse: () => const [],
       ),
     );
@@ -192,17 +161,15 @@ class _ModuleListPageState extends State<ModuleListPage> {
       ),
     );
 
-    final parentId = visited.last;
-
+    final parent = visited.last;
     context.go(
-      '/modules/${widget.projectId}/sub/$parentId',
+      '/modules/${widget.projectId}/sub/${parent.id}',
       extra: widget.projectName,
     );
   }
 
   Widget _buildFab(BuildContext context) {
     return PopupMenuButton<String>(
-      offset: const Offset(0.0, -56.0),
       icon: const Icon(Icons.add),
       onSelected: (value) {
         if (value == 'add_module') {
@@ -225,51 +192,45 @@ class _ModuleListPageState extends State<ModuleListPage> {
     );
   }
 
-  void _openCreateModuleDialog(BuildContext context) {
+  void _openCreateModuleDialog(BuildContext ctx) {
     final nameCtrl = TextEditingController();
     final descCtrl = TextEditingController();
 
     showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Nowy moduł'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nazwa'),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(labelText: 'Opis'),
-            ),
+            TextField(controller: nameCtrl),
+            TextField(controller: descCtrl),
           ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(dialogCtx),
             child: const Text('Anuluj'),
           ),
           ElevatedButton(
             onPressed: () {
               final name = nameCtrl.text.trim();
-              final desc = descCtrl.text.trim();
               if (name.isEmpty) return;
 
-              final module = ModuleEntity(
-                id: 'module_${DateTime.now().millisecondsSinceEpoch}',
-                name: name,
-                description: desc.isEmpty ? null : desc,
-                projectId: widget.projectId,
-                parentModuleId: widget.moduleId,
+              ctx.read<ModuleBloc>().add(
+                ModuleEvent.createModule(
+                  module: ModuleEntity(
+                    id: 'module_${DateTime.now().millisecondsSinceEpoch}',
+                    name: name,
+                    description:
+                    descCtrl.text.trim().isEmpty ? null : descCtrl.text,
+                    projectId: widget.projectId,
+                    parentModuleId: widget.moduleId,
+                  ),
+                ),
               );
 
-              context.read<ModuleBloc>().add(
-                ModuleEvent.createModule(module: module),
-              );
-              Navigator.pop(ctx);
+              Navigator.pop(dialogCtx);
             },
             child: const Text('Dodaj'),
           ),
@@ -278,51 +239,35 @@ class _ModuleListPageState extends State<ModuleListPage> {
     );
   }
 
-  void _openCreatePlanDialog(BuildContext context) {
+  void _openCreatePlanDialog(BuildContext ctx) {
     final nameCtrl = TextEditingController();
-    final descCtrl = TextEditingController();
 
     showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
+      context: ctx,
+      builder: (dialogCtx) => AlertDialog(
         title: const Text('Nowy plan testów'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nazwa'),
-            ),
-            const SizedBox(height: 16.0),
-            TextField(
-              controller: descCtrl,
-              decoration: const InputDecoration(labelText: 'Opis'),
-            ),
-          ],
-        ),
+        content: TextField(controller: nameCtrl),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx),
+            onPressed: () => Navigator.pop(dialogCtx),
             child: const Text('Anuluj'),
           ),
           ElevatedButton(
             onPressed: () {
               final name = nameCtrl.text.trim();
-              final desc = descCtrl.text.trim();
               if (name.isEmpty) return;
 
-              final plan = TestPlanEntity(
-                id: 'plan_${DateTime.now().millisecondsSinceEpoch}',
-                name: name,
-                description: desc.isEmpty ? null : desc,
-                moduleId: widget.moduleId ?? '',
+              ctx.read<ModuleBloc>().add(
+                ModuleEvent.createTestPlan(
+                  plan: TestPlanEntity(
+                    id: 'plan_${DateTime.now().millisecondsSinceEpoch}',
+                    name: name,
+                    moduleId: widget.moduleId!,
+                  ),
+                ),
               );
 
-              context.read<ModuleBloc>().add(
-                ModuleEvent.createTestPlan(plan: plan),
-              );
-
-              Navigator.pop(ctx);
+              Navigator.pop(dialogCtx);
             },
             child: const Text('Dodaj'),
           ),

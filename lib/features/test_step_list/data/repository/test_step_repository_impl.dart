@@ -33,9 +33,13 @@ class TestStepRepositoryImpl implements TestStepRepository {
         await local.upsertTestStep(dto.toDbModel());
       }
       final refreshed = await local.getTestStepsForCase(caseId);
-      yield refreshed.map((rows) => rows.map((e) => e.toEntity()).toList());
+      yield refreshed.map(
+            (rows) => rows.map((e) => e.toEntity()).toList(),
+      );
     } catch (_) {
-      yield Left(DatabaseFailure("Nie udało się pobrać kroków test case'a z serwera."));
+      yield Left(
+        DatabaseFailure("Nie udało się pobrać kroków test case'a z serwera."),
+      );
     }
   }
 
@@ -47,7 +51,9 @@ class TestStepRepositoryImpl implements TestStepRepository {
       await local.upsertTestStep(created.toDbModel());
       return Right(created.toEntity());
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się utworzyć kroku."));
+      return Left(
+        DatabaseFailure("Nie udało się utworzyć kroku."),
+      );
     }
   }
 
@@ -59,7 +65,9 @@ class TestStepRepositoryImpl implements TestStepRepository {
       await local.upsertTestStep(updated.toDbModel());
       return Right(updated.toEntity());
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się zaktualizować kroku."));
+      return Left(
+        DatabaseFailure("Nie udało się zaktualizować kroku."),
+      );
     }
   }
 
@@ -70,7 +78,9 @@ class TestStepRepositoryImpl implements TestStepRepository {
       await local.deleteTestStep(id);
       return const Right(null);
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się usunąć kroku."));
+      return Left(
+        DatabaseFailure("Nie udało się usunąć kroku."),
+      );
     }
   }
 
@@ -81,14 +91,45 @@ class TestStepRepositoryImpl implements TestStepRepository {
         final dto = s.toDto();
         await remote.updateStep(dto);
       }
-
       await local.updateTestStepOrder(
         steps.map((e) => e.toDbModel()).toList(),
       );
-
       return const Right(null);
     } catch (_) {
-      return Left(DatabaseFailure("Nie udało się zmienić kolejności kroków."));
+      return Left(
+        DatabaseFailure("Nie udało się zmienić kolejności kroków."),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<TestStepEntity>>> getStepsForCaseOnce(
+      String caseId,
+      ) async {
+    try {
+      final localResult = await local.getTestStepsForCase(caseId);
+
+      if (localResult.isRight() && localResult.getOrElse(() => []).isNotEmpty) {
+        return Right(
+          localResult.getOrElse(() => [])
+              .map((row) => row.toEntity())
+              .toList(),
+        );
+      }
+
+      final remoteDtos = await remote.fetchStepsForCase(caseId);
+      for (final dto in remoteDtos) {
+        await local.upsertTestStep(dto.toDbModel());
+      }
+
+      final refreshed = await local.getTestStepsForCase(caseId);
+      return refreshed.map(
+            (rows) => rows.map((e) => e.toEntity()).toList(),
+      );
+    } catch (_) {
+      return Left(
+        DatabaseFailure("Nie udało się pobrać kroków test case'a."),
+      );
     }
   }
 }

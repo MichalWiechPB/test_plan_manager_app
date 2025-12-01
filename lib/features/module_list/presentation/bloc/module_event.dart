@@ -1,4 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
@@ -25,7 +26,7 @@ sealed class ModuleEvent with _$ModuleEvent {
 
   const factory ModuleEvent.setVisitedPath({
     required String projectId,
-    required List<String> visited,
+    required List<VisitedModule> visited,
   }) = SetVisitedPathEvent;
 
   const factory ModuleEvent.createModule({
