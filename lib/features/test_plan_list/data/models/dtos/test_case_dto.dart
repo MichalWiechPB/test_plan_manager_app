@@ -89,20 +89,17 @@ class TestCaseDto {
   }
 
 
-  /// PATCH (jak TestStep)
   Map<String, dynamic> toGraphUpdateJson() {
     return {
-      "PlanId": planId,
-      "Title": title,
-      "Status": status,
-      "ExpectedResult": expectedResult,
-      "AssignedToUserId": assignedToUserId,
-      "ParentCaseId": parentCaseId,
-      "TotalSteps": totalSteps,
-      "PassedSteps": passedSteps,
-      "LastModifiedUtc": lastModifiedUtc?.toUtc().toIso8601String(),
+      "title0": title,
+      "planId": planId,
+      "status": status,
+      "expectedResult": expectedResult,
+      "totalSteps": totalSteps,
+      "passedSteps": passedSteps,
     };
   }
+
 
   static int? _parseInt(dynamic v) {
     if (v == null) return null;
