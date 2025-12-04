@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+import 'package:test_plan_manager_app/features/module_list/data/models/visited_module.dart';
+
 import '../bloc/module_bloc.dart';
 import '../bloc/module_event.dart';
 
@@ -20,10 +21,7 @@ Widget buildPathBar(
       children: [
         GestureDetector(
           onTap: () {
-            bloc.add(ModuleEvent.setVisitedPath(
-              projectId: projectId,
-              visited: const [],
-            ));
+            bloc.add(const ModuleEvent.resetVisited());
             context.go('/modules/$projectId');
           },
           child: const Text(
@@ -36,18 +34,21 @@ Widget buildPathBar(
         ),
         ...List.generate(visited.length, (i) {
           final item = visited[i];
+          final isClickable = i < visited.length - 1;
 
           return Row(
             children: [
               const Icon(Icons.chevron_right, size: 16),
               GestureDetector(
-                onTap: i < visited.length - 1
+                onTap: isClickable
                     ? () {
                   final shortened = visited.sublist(0, i + 1);
-                  bloc.add(ModuleEvent.setVisitedPath(
-                    projectId: projectId,
-                    visited: shortened,
-                  ));
+
+                  bloc.add(const ModuleEvent.resetVisited());
+                  for (final v in shortened) {
+                    bloc.add(ModuleEvent.pushVisited(module: v));
+                  }
+
                   context.go('/modules/$projectId/sub/${item.id}');
                 }
                     : null,
@@ -55,8 +56,8 @@ Widget buildPathBar(
                   item.name,
                   style: TextStyle(
                     fontWeight: FontWeight.w500,
-                    color: i < visited.length - 1 ? Colors.blue : Colors.black87,
-                    decoration: i < visited.length - 1
+                    color: isClickable ? Colors.blue : Colors.black87,
+                    decoration: isClickable
                         ? TextDecoration.underline
                         : TextDecoration.none,
                   ),

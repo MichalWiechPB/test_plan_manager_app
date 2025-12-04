@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+import 'package:test_plan_manager_app/features/module_list/data/models/visited_module.dart';
+
 import '../bloc/module_bloc.dart';
 import '../bloc/module_event.dart';
 import '../bloc/module_state.dart';
@@ -38,9 +39,7 @@ class _ModuleTileState extends State<ModuleTile> {
       );
 
       if (!hasPreview) {
-        bloc.add(
-          ModuleEvent.loadPreviewForModule(moduleId: id),
-        );
+        bloc.add(ModuleEvent.loadPreviewForModule(moduleId: id));
       }
     }
   }
@@ -49,28 +48,14 @@ class _ModuleTileState extends State<ModuleTile> {
     final bloc = context.read<ModuleBloc>();
     final m = widget.module;
 
-    final visited = List<VisitedModule>.from(
-      bloc.state.maybeWhen(
-        success: (_, __, ___, visited, ____, _____) => visited,
-        orElse: () => const [],
-      ),
-    );
-
-    // zapobiega duplikatom
-    if (!visited.any((e) => e.id == m.id)) {
-      visited.add(VisitedModule(m.id, m.name));
-    }
-
     bloc.add(
-      ModuleEvent.setVisitedPath(
-        projectId: m.projectId,
-        visited: visited,
+      ModuleEvent.pushVisited(
+        module: VisitedModule(m.id, m.name),
       ),
     );
 
     context.go('/modules/${m.projectId}/sub/${m.id}');
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -159,8 +144,7 @@ class _ModuleTileState extends State<ModuleTile> {
                     : CrossFadeState.showFirst,
                 firstChild: const SizedBox.shrink(),
                 secondChild: Padding(
-                  padding:
-                  const EdgeInsets.only(left: 22.0, top: 6.0, bottom: 6.0),
+                  padding: const EdgeInsets.only(left: 22.0, top: 6.0, bottom: 6.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -168,8 +152,7 @@ class _ModuleTileState extends State<ModuleTile> {
                             (item) => GestureDetector(
                           onTap: () => _openModule(context),
                           child: Padding(
-                            padding:
-                            const EdgeInsets.symmetric(vertical: 2.0),
+                            padding: const EdgeInsets.symmetric(vertical: 2.0),
                             child: Text(
                               '• ${item.name}',
                               style: const TextStyle(fontSize: 13.0),
@@ -199,8 +182,7 @@ class _ModuleTileState extends State<ModuleTile> {
 
   void _openEditDialog(BuildContext context) {
     final nameCtrl = TextEditingController(text: widget.module.name);
-    final descCtrl =
-    TextEditingController(text: widget.module.description ?? '');
+    final descCtrl = TextEditingController(text: widget.module.description ?? '');
 
     showDialog(
       context: context,

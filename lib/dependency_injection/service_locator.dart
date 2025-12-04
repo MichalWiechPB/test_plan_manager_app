@@ -18,10 +18,7 @@ import 'package:test_plan_manager_app/features/test_plan_list/domain/services/te
 
 // 🌍 GLOBAL
 import '../core/global/file_service/file_service.dart';
-import '../core/global/navigation/data/repository/navigation_repository_impl.dart';
-import '../core/global/navigation/domain/repository/navigation_repository.dart';
-import '../core/global/navigation/domain/usecases/get_visited_modules.dart';
-import '../core/global/navigation/domain/usecases/save_visited_modules.dart';
+
 
 // 🧩 DATABASE
 import '../core/global/pkce_service/pkce_service.dart';
@@ -187,8 +184,6 @@ Future<void> init() async {
     getModulesForProject: sl(),
     getSubmodulesForModule: sl(),
     getTestPlansForModule: sl(),
-    saveVisitedModules: sl(),
-    getVisitedModules: sl(),
     createModule: sl(),
     updateModule: sl(),
     deleteModule: sl(),
@@ -324,13 +319,6 @@ Future<void> init() async {
     updateStepTempStatus: sl(),
     exportToFile: sl(),
   ));
-
-  ///===========================
-  /// NAVIGATION
-  ///===========================
-  sl.registerLazySingleton<NavigationRepository>(() => NavigationRepositoryImpl());
-  sl.registerLazySingleton(() => SaveVisitedModules(sl()));
-  sl.registerLazySingleton(() => GetVisitedModules(sl()));
 
   ///===========================
   /// UTILS

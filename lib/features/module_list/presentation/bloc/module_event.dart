@@ -1,7 +1,9 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+import 'package:test_plan_manager_app/features/module_list/data/models/visited_module.dart';
+
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
+import 'module_state.dart'; // zawiera VisitedModule
 
 part 'module_event.freezed.dart';
 
@@ -19,15 +21,6 @@ sealed class ModuleEvent with _$ModuleEvent {
   const factory ModuleEvent.loadPreviewForModule({
     required String moduleId,
   }) = LoadPreviewForModuleEvent;
-
-  const factory ModuleEvent.navigateBack({
-    required String projectId,
-  }) = NavigateBackEvent;
-
-  const factory ModuleEvent.setVisitedPath({
-    required String projectId,
-    required List<VisitedModule> visited,
-  }) = SetVisitedPathEvent;
 
   const factory ModuleEvent.createModule({
     required ModuleEntity module,
@@ -52,4 +45,12 @@ sealed class ModuleEvent with _$ModuleEvent {
   const factory ModuleEvent.deleteTestPlan({
     required String testPlanId,
   }) = DeleteTestPlanEvent;
+
+  const factory ModuleEvent.pushVisited({
+    required VisitedModule module,
+  }) = PushVisitedEvent;
+
+  const factory ModuleEvent.popVisited() = PopVisitedEvent;
+
+  const factory ModuleEvent.resetVisited() = ResetVisitedEvent;
 }

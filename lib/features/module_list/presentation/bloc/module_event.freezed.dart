@@ -55,21 +55,22 @@ extension ModuleEventPatterns on ModuleEvent {
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( GetModulesForProjectEvent value)?  getModulesForProject,TResult Function( GetSubmodulesForModuleEvent value)?  getSubmodulesForModule,TResult Function( LoadPreviewForModuleEvent value)?  loadPreviewForModule,TResult Function( NavigateBackEvent value)?  navigateBack,TResult Function( SetVisitedPathEvent value)?  setVisitedPath,TResult Function( CreateModuleEvent value)?  createModule,TResult Function( UpdateModuleEvent value)?  updateModule,TResult Function( DeleteModuleEvent value)?  deleteModule,TResult Function( CreateTestPlanEvent value)?  createTestPlan,TResult Function( UpdateTestPlanEvent value)?  updateTestPlan,TResult Function( DeleteTestPlanEvent value)?  deleteTestPlan,required TResult orElse(),}){
+@optionalTypeArgs TResult maybeMap<TResult extends Object?>({TResult Function( GetModulesForProjectEvent value)?  getModulesForProject,TResult Function( GetSubmodulesForModuleEvent value)?  getSubmodulesForModule,TResult Function( LoadPreviewForModuleEvent value)?  loadPreviewForModule,TResult Function( CreateModuleEvent value)?  createModule,TResult Function( UpdateModuleEvent value)?  updateModule,TResult Function( DeleteModuleEvent value)?  deleteModule,TResult Function( CreateTestPlanEvent value)?  createTestPlan,TResult Function( UpdateTestPlanEvent value)?  updateTestPlan,TResult Function( DeleteTestPlanEvent value)?  deleteTestPlan,TResult Function( PushVisitedEvent value)?  pushVisited,TResult Function( PopVisitedEvent value)?  popVisited,TResult Function( ResetVisitedEvent value)?  resetVisited,required TResult orElse(),}){
 final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
-return loadPreviewForModule(_that);case NavigateBackEvent() when navigateBack != null:
-return navigateBack(_that);case SetVisitedPathEvent() when setVisitedPath != null:
-return setVisitedPath(_that);case CreateModuleEvent() when createModule != null:
+return loadPreviewForModule(_that);case CreateModuleEvent() when createModule != null:
 return createModule(_that);case UpdateModuleEvent() when updateModule != null:
 return updateModule(_that);case DeleteModuleEvent() when deleteModule != null:
 return deleteModule(_that);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that);case DeleteTestPlanEvent() when deleteTestPlan != null:
-return deleteTestPlan(_that);case _:
+return deleteTestPlan(_that);case PushVisitedEvent() when pushVisited != null:
+return pushVisited(_that);case PopVisitedEvent() when popVisited != null:
+return popVisited(_that);case ResetVisitedEvent() when resetVisited != null:
+return resetVisited(_that);case _:
   return orElse();
 
 }
@@ -87,21 +88,22 @@ return deleteTestPlan(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( GetModulesForProjectEvent value)  getModulesForProject,required TResult Function( GetSubmodulesForModuleEvent value)  getSubmodulesForModule,required TResult Function( LoadPreviewForModuleEvent value)  loadPreviewForModule,required TResult Function( NavigateBackEvent value)  navigateBack,required TResult Function( SetVisitedPathEvent value)  setVisitedPath,required TResult Function( CreateModuleEvent value)  createModule,required TResult Function( UpdateModuleEvent value)  updateModule,required TResult Function( DeleteModuleEvent value)  deleteModule,required TResult Function( CreateTestPlanEvent value)  createTestPlan,required TResult Function( UpdateTestPlanEvent value)  updateTestPlan,required TResult Function( DeleteTestPlanEvent value)  deleteTestPlan,}){
+@optionalTypeArgs TResult map<TResult extends Object?>({required TResult Function( GetModulesForProjectEvent value)  getModulesForProject,required TResult Function( GetSubmodulesForModuleEvent value)  getSubmodulesForModule,required TResult Function( LoadPreviewForModuleEvent value)  loadPreviewForModule,required TResult Function( CreateModuleEvent value)  createModule,required TResult Function( UpdateModuleEvent value)  updateModule,required TResult Function( DeleteModuleEvent value)  deleteModule,required TResult Function( CreateTestPlanEvent value)  createTestPlan,required TResult Function( UpdateTestPlanEvent value)  updateTestPlan,required TResult Function( DeleteTestPlanEvent value)  deleteTestPlan,required TResult Function( PushVisitedEvent value)  pushVisited,required TResult Function( PopVisitedEvent value)  popVisited,required TResult Function( ResetVisitedEvent value)  resetVisited,}){
 final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent():
 return getModulesForProject(_that);case GetSubmodulesForModuleEvent():
 return getSubmodulesForModule(_that);case LoadPreviewForModuleEvent():
-return loadPreviewForModule(_that);case NavigateBackEvent():
-return navigateBack(_that);case SetVisitedPathEvent():
-return setVisitedPath(_that);case CreateModuleEvent():
+return loadPreviewForModule(_that);case CreateModuleEvent():
 return createModule(_that);case UpdateModuleEvent():
 return updateModule(_that);case DeleteModuleEvent():
 return deleteModule(_that);case CreateTestPlanEvent():
 return createTestPlan(_that);case UpdateTestPlanEvent():
 return updateTestPlan(_that);case DeleteTestPlanEvent():
-return deleteTestPlan(_that);}
+return deleteTestPlan(_that);case PushVisitedEvent():
+return pushVisited(_that);case PopVisitedEvent():
+return popVisited(_that);case ResetVisitedEvent():
+return resetVisited(_that);}
 }
 /// A variant of `map` that fallback to returning `null`.
 ///
@@ -115,21 +117,22 @@ return deleteTestPlan(_that);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( GetModulesForProjectEvent value)?  getModulesForProject,TResult? Function( GetSubmodulesForModuleEvent value)?  getSubmodulesForModule,TResult? Function( LoadPreviewForModuleEvent value)?  loadPreviewForModule,TResult? Function( NavigateBackEvent value)?  navigateBack,TResult? Function( SetVisitedPathEvent value)?  setVisitedPath,TResult? Function( CreateModuleEvent value)?  createModule,TResult? Function( UpdateModuleEvent value)?  updateModule,TResult? Function( DeleteModuleEvent value)?  deleteModule,TResult? Function( CreateTestPlanEvent value)?  createTestPlan,TResult? Function( UpdateTestPlanEvent value)?  updateTestPlan,TResult? Function( DeleteTestPlanEvent value)?  deleteTestPlan,}){
+@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>({TResult? Function( GetModulesForProjectEvent value)?  getModulesForProject,TResult? Function( GetSubmodulesForModuleEvent value)?  getSubmodulesForModule,TResult? Function( LoadPreviewForModuleEvent value)?  loadPreviewForModule,TResult? Function( CreateModuleEvent value)?  createModule,TResult? Function( UpdateModuleEvent value)?  updateModule,TResult? Function( DeleteModuleEvent value)?  deleteModule,TResult? Function( CreateTestPlanEvent value)?  createTestPlan,TResult? Function( UpdateTestPlanEvent value)?  updateTestPlan,TResult? Function( DeleteTestPlanEvent value)?  deleteTestPlan,TResult? Function( PushVisitedEvent value)?  pushVisited,TResult? Function( PopVisitedEvent value)?  popVisited,TResult? Function( ResetVisitedEvent value)?  resetVisited,}){
 final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
-return loadPreviewForModule(_that);case NavigateBackEvent() when navigateBack != null:
-return navigateBack(_that);case SetVisitedPathEvent() when setVisitedPath != null:
-return setVisitedPath(_that);case CreateModuleEvent() when createModule != null:
+return loadPreviewForModule(_that);case CreateModuleEvent() when createModule != null:
 return createModule(_that);case UpdateModuleEvent() when updateModule != null:
 return updateModule(_that);case DeleteModuleEvent() when deleteModule != null:
 return deleteModule(_that);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that);case DeleteTestPlanEvent() when deleteTestPlan != null:
-return deleteTestPlan(_that);case _:
+return deleteTestPlan(_that);case PushVisitedEvent() when pushVisited != null:
+return pushVisited(_that);case PopVisitedEvent() when popVisited != null:
+return popVisited(_that);case ResetVisitedEvent() when resetVisited != null:
+return resetVisited(_that);case _:
   return null;
 
 }
@@ -146,20 +149,21 @@ return deleteTestPlan(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( String projectId)?  navigateBack,TResult Function( String projectId,  List<VisitedModule> visited)?  setVisitedPath,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module)?  updateModule,TResult Function( String moduleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module)?  updateModule,TResult Function( String moduleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,TResult Function( VisitedModule module)?  pushVisited,TResult Function()?  popVisited,TResult Function()?  resetVisited,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
-return loadPreviewForModule(_that.moduleId);case NavigateBackEvent() when navigateBack != null:
-return navigateBack(_that.projectId);case SetVisitedPathEvent() when setVisitedPath != null:
-return setVisitedPath(_that.projectId,_that.visited);case CreateModuleEvent() when createModule != null:
+return loadPreviewForModule(_that.moduleId);case CreateModuleEvent() when createModule != null:
 return createModule(_that.module);case UpdateModuleEvent() when updateModule != null:
 return updateModule(_that.module);case DeleteModuleEvent() when deleteModule != null:
 return deleteModule(_that.moduleId);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that.plan);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent() when deleteTestPlan != null:
-return deleteTestPlan(_that.testPlanId);case _:
+return deleteTestPlan(_that.testPlanId);case PushVisitedEvent() when pushVisited != null:
+return pushVisited(_that.module);case PopVisitedEvent() when popVisited != null:
+return popVisited();case ResetVisitedEvent() when resetVisited != null:
+return resetVisited();case _:
   return orElse();
 
 }
@@ -177,20 +181,21 @@ return deleteTestPlan(_that.testPlanId);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( String projectId)  navigateBack,required TResult Function( String projectId,  List<VisitedModule> visited)  setVisitedPath,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module)  updateModule,required TResult Function( String moduleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module)  updateModule,required TResult Function( String moduleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,required TResult Function( VisitedModule module)  pushVisited,required TResult Function()  popVisited,required TResult Function()  resetVisited,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent():
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent():
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent():
-return loadPreviewForModule(_that.moduleId);case NavigateBackEvent():
-return navigateBack(_that.projectId);case SetVisitedPathEvent():
-return setVisitedPath(_that.projectId,_that.visited);case CreateModuleEvent():
+return loadPreviewForModule(_that.moduleId);case CreateModuleEvent():
 return createModule(_that.module);case UpdateModuleEvent():
 return updateModule(_that.module);case DeleteModuleEvent():
 return deleteModule(_that.moduleId);case CreateTestPlanEvent():
 return createTestPlan(_that.plan);case UpdateTestPlanEvent():
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent():
-return deleteTestPlan(_that.testPlanId);}
+return deleteTestPlan(_that.testPlanId);case PushVisitedEvent():
+return pushVisited(_that.module);case PopVisitedEvent():
+return popVisited();case ResetVisitedEvent():
+return resetVisited();}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -204,20 +209,21 @@ return deleteTestPlan(_that.testPlanId);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( String projectId)?  navigateBack,TResult? Function( String projectId,  List<VisitedModule> visited)?  setVisitedPath,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module)?  updateModule,TResult? Function( String moduleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module)?  updateModule,TResult? Function( String moduleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,TResult? Function( VisitedModule module)?  pushVisited,TResult? Function()?  popVisited,TResult? Function()?  resetVisited,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
-return loadPreviewForModule(_that.moduleId);case NavigateBackEvent() when navigateBack != null:
-return navigateBack(_that.projectId);case SetVisitedPathEvent() when setVisitedPath != null:
-return setVisitedPath(_that.projectId,_that.visited);case CreateModuleEvent() when createModule != null:
+return loadPreviewForModule(_that.moduleId);case CreateModuleEvent() when createModule != null:
 return createModule(_that.module);case UpdateModuleEvent() when updateModule != null:
 return updateModule(_that.module);case DeleteModuleEvent() when deleteModule != null:
 return deleteModule(_that.moduleId);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that.plan);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent() when deleteTestPlan != null:
-return deleteTestPlan(_that.testPlanId);case _:
+return deleteTestPlan(_that.testPlanId);case PushVisitedEvent() when pushVisited != null:
+return pushVisited(_that.module);case PopVisitedEvent() when popVisited != null:
+return popVisited();case ResetVisitedEvent() when resetVisited != null:
+return resetVisited();case _:
   return null;
 
 }
@@ -419,146 +425,6 @@ class _$LoadPreviewForModuleEventCopyWithImpl<$Res>
   return _then(LoadPreviewForModuleEvent(
 moduleId: null == moduleId ? _self.moduleId : moduleId // ignore: cast_nullable_to_non_nullable
 as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class NavigateBackEvent implements ModuleEvent {
-  const NavigateBackEvent({required this.projectId});
-  
-
- final  String projectId;
-
-/// Create a copy of ModuleEvent
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$NavigateBackEventCopyWith<NavigateBackEvent> get copyWith => _$NavigateBackEventCopyWithImpl<NavigateBackEvent>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is NavigateBackEvent&&(identical(other.projectId, projectId) || other.projectId == projectId));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,projectId);
-
-@override
-String toString() {
-  return 'ModuleEvent.navigateBack(projectId: $projectId)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $NavigateBackEventCopyWith<$Res> implements $ModuleEventCopyWith<$Res> {
-  factory $NavigateBackEventCopyWith(NavigateBackEvent value, $Res Function(NavigateBackEvent) _then) = _$NavigateBackEventCopyWithImpl;
-@useResult
-$Res call({
- String projectId
-});
-
-
-
-
-}
-/// @nodoc
-class _$NavigateBackEventCopyWithImpl<$Res>
-    implements $NavigateBackEventCopyWith<$Res> {
-  _$NavigateBackEventCopyWithImpl(this._self, this._then);
-
-  final NavigateBackEvent _self;
-  final $Res Function(NavigateBackEvent) _then;
-
-/// Create a copy of ModuleEvent
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? projectId = null,}) {
-  return _then(NavigateBackEvent(
-projectId: null == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
-as String,
-  ));
-}
-
-
-}
-
-/// @nodoc
-
-
-class SetVisitedPathEvent implements ModuleEvent {
-  const SetVisitedPathEvent({required this.projectId, required final  List<VisitedModule> visited}): _visited = visited;
-  
-
- final  String projectId;
- final  List<VisitedModule> _visited;
- List<VisitedModule> get visited {
-  if (_visited is EqualUnmodifiableListView) return _visited;
-  // ignore: implicit_dynamic_type
-  return EqualUnmodifiableListView(_visited);
-}
-
-
-/// Create a copy of ModuleEvent
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$SetVisitedPathEventCopyWith<SetVisitedPathEvent> get copyWith => _$SetVisitedPathEventCopyWithImpl<SetVisitedPathEvent>(this, _$identity);
-
-
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is SetVisitedPathEvent&&(identical(other.projectId, projectId) || other.projectId == projectId)&&const DeepCollectionEquality().equals(other._visited, _visited));
-}
-
-
-@override
-int get hashCode => Object.hash(runtimeType,projectId,const DeepCollectionEquality().hash(_visited));
-
-@override
-String toString() {
-  return 'ModuleEvent.setVisitedPath(projectId: $projectId, visited: $visited)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class $SetVisitedPathEventCopyWith<$Res> implements $ModuleEventCopyWith<$Res> {
-  factory $SetVisitedPathEventCopyWith(SetVisitedPathEvent value, $Res Function(SetVisitedPathEvent) _then) = _$SetVisitedPathEventCopyWithImpl;
-@useResult
-$Res call({
- String projectId, List<VisitedModule> visited
-});
-
-
-
-
-}
-/// @nodoc
-class _$SetVisitedPathEventCopyWithImpl<$Res>
-    implements $SetVisitedPathEventCopyWith<$Res> {
-  _$SetVisitedPathEventCopyWithImpl(this._self, this._then);
-
-  final SetVisitedPathEvent _self;
-  final $Res Function(SetVisitedPathEvent) _then;
-
-/// Create a copy of ModuleEvent
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? projectId = null,Object? visited = null,}) {
-  return _then(SetVisitedPathEvent(
-projectId: null == projectId ? _self.projectId : projectId // ignore: cast_nullable_to_non_nullable
-as String,visited: null == visited ? _self._visited : visited // ignore: cast_nullable_to_non_nullable
-as List<VisitedModule>,
   ));
 }
 
@@ -960,5 +826,135 @@ as String,
 
 
 }
+
+/// @nodoc
+
+
+class PushVisitedEvent implements ModuleEvent {
+  const PushVisitedEvent({required this.module});
+  
+
+ final  VisitedModule module;
+
+/// Create a copy of ModuleEvent
+/// with the given fields replaced by the non-null parameter values.
+@JsonKey(includeFromJson: false, includeToJson: false)
+@pragma('vm:prefer-inline')
+$PushVisitedEventCopyWith<PushVisitedEvent> get copyWith => _$PushVisitedEventCopyWithImpl<PushVisitedEvent>(this, _$identity);
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PushVisitedEvent&&(identical(other.module, module) || other.module == module));
+}
+
+
+@override
+int get hashCode => Object.hash(runtimeType,module);
+
+@override
+String toString() {
+  return 'ModuleEvent.pushVisited(module: $module)';
+}
+
+
+}
+
+/// @nodoc
+abstract mixin class $PushVisitedEventCopyWith<$Res> implements $ModuleEventCopyWith<$Res> {
+  factory $PushVisitedEventCopyWith(PushVisitedEvent value, $Res Function(PushVisitedEvent) _then) = _$PushVisitedEventCopyWithImpl;
+@useResult
+$Res call({
+ VisitedModule module
+});
+
+
+
+
+}
+/// @nodoc
+class _$PushVisitedEventCopyWithImpl<$Res>
+    implements $PushVisitedEventCopyWith<$Res> {
+  _$PushVisitedEventCopyWithImpl(this._self, this._then);
+
+  final PushVisitedEvent _self;
+  final $Res Function(PushVisitedEvent) _then;
+
+/// Create a copy of ModuleEvent
+/// with the given fields replaced by the non-null parameter values.
+@pragma('vm:prefer-inline') $Res call({Object? module = null,}) {
+  return _then(PushVisitedEvent(
+module: null == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
+as VisitedModule,
+  ));
+}
+
+
+}
+
+/// @nodoc
+
+
+class PopVisitedEvent implements ModuleEvent {
+  const PopVisitedEvent();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is PopVisitedEvent);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'ModuleEvent.popVisited()';
+}
+
+
+}
+
+
+
+
+/// @nodoc
+
+
+class ResetVisitedEvent implements ModuleEvent {
+  const ResetVisitedEvent();
+  
+
+
+
+
+
+
+@override
+bool operator ==(Object other) {
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is ResetVisitedEvent);
+}
+
+
+@override
+int get hashCode => runtimeType.hashCode;
+
+@override
+String toString() {
+  return 'ModuleEvent.resetVisited()';
+}
+
+
+}
+
+
+
 
 // dart format on

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+import 'package:test_plan_manager_app/features/module_list/data/models/visited_module.dart';
 
 import '../bloc/module_bloc.dart';
 import '../bloc/module_state.dart';
@@ -133,35 +133,26 @@ class _ModuleListPageState extends State<ModuleListPage> {
 
   void _onBackPressed(BuildContext context) {
     final bloc = context.read<ModuleBloc>();
+    final state = bloc.state;
 
-    final visited = List<VisitedModule>.from(
-      bloc.state.maybeWhen(
-        success: (_, __, ___, path, ____, _____) => path,
-        orElse: () => const [],
-      ),
-    );
-
-    if (visited.isEmpty || visited.length == 1) {
-      bloc.add(
-        ModuleEvent.setVisitedPath(
-          projectId: widget.projectId,
-          visited: const [],
-        ),
-      );
+    if (state is! ModuleSuccess) {
       context.go('/projects');
       return;
     }
 
+    final visited = List<VisitedModule>.from(state.visitedModules);
+
+    if (visited.isEmpty || visited.length == 1) {
+      bloc.add(const ModuleEvent.resetVisited());
+      context.go('/projects');
+      return;
+    }
+
+    bloc.add(const ModuleEvent.popVisited());
+
     visited.removeLast();
-
-    bloc.add(
-      ModuleEvent.setVisitedPath(
-        projectId: widget.projectId,
-        visited: visited,
-      ),
-    );
-
     final parent = visited.last;
+
     context.go(
       '/modules/${widget.projectId}/sub/${parent.id}',
       extra: widget.projectName,
@@ -222,8 +213,9 @@ class _ModuleListPageState extends State<ModuleListPage> {
                   module: ModuleEntity(
                     id: 'module_${DateTime.now().millisecondsSinceEpoch}',
                     name: name,
-                    description:
-                    descCtrl.text.trim().isEmpty ? null : descCtrl.text,
+                    description: descCtrl.text.trim().isEmpty
+                        ? null
+                        : descCtrl.text,
                     projectId: widget.projectId,
                     parentModuleId: widget.moduleId,
                   ),

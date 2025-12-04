@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:test_plan_manager_app/core/global/navigation/data/repository/navigation_repository_impl.dart';
+import 'package:test_plan_manager_app/features/module_list/data/models/visited_module.dart';
 import '../../domain/entities/module.dart';
 import '../../domain/entities/test_plan.dart';
 
