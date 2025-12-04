@@ -4,6 +4,8 @@ import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:test_plan_manager_app/core/config/graph_client.dart';
+import 'package:test_plan_manager_app/core/config/graph_config.dart';
 import 'package:test_plan_manager_app/database/datasources/auth/auth.dart';
 import 'package:test_plan_manager_app/database/datasources/comments/local/comment_local_datasource.dart';
 import 'package:test_plan_manager_app/database/datasources/comments/local/comment_local_datasource_impl.dart';
@@ -129,10 +131,11 @@ Future<void> init() async {
   sl.registerLazySingleton<ProjectLocalDataSource>(
           () => ProjectLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<ProjectsRemoteDataSource>(
-          () => ProjectsRemoteDataSourceImpl(
-        httpClient: sl(),
-        tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
-      ));
+        () => ProjectsRemoteDataSourceImpl(
+      graphClient: sl<GraphClient>(),
+    ),
+  );
+
 
   sl.registerLazySingleton<ProjectRepository>(
           () => ProjectRepositoryImpl(local: sl(), remote: sl()));
@@ -144,16 +147,27 @@ Future<void> init() async {
 
   sl.registerFactory(() => ProjectBloc(sl(), sl(), sl(), sl()));
 
+  sl.registerLazySingleton<GraphClient>(
+        () => GraphClient(
+      dio: sl(),
+      tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
+      siteId: GraphConfig.siteId,
+      baseUrl: GraphConfig.baseUrl,
+    ),
+  );
+
+
   ///===========================
   /// MODULES
   ///===========================
   sl.registerLazySingleton<ModuleLocalDataSource>(
           () => ModuleLocalDataSourceImpl(sl(), sl()));
   sl.registerLazySingleton<ModuleRemoteDataSource>(
-          () => ModuleRemoteDataSourceImpl(
-        httpClient: sl(),
-        tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
-      ));
+        () => ModuleRemoteDataSourceImpl(
+      graphClient: sl<GraphClient>(),
+    ),
+  );
+
 
   sl.registerLazySingleton<ModuleRepository>(
           () => ModuleRepositoryImpl(local: sl(), remote: sl()));
@@ -188,10 +202,11 @@ Future<void> init() async {
   sl.registerLazySingleton<TestCaseLocalDataSource>(
           () => TestCaseLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<TestCasesRemoteDataSource>(
-          () => TestCasesRemoteDataSourceImpl(
-        httpClient: sl(),
-        tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
-      ));
+        () => TestCasesRemoteDataSourceImpl(
+      graphClient: sl<GraphClient>(),
+    ),
+  );
+
 
   sl.registerLazySingleton<TestCaseRepository>(
           () => TestCaseRepositoryImpl(local: sl(), remote: sl()));
@@ -214,10 +229,11 @@ Future<void> init() async {
   sl.registerLazySingleton<TestStepLocalDataSource>(
           () => TestStepLocalDataSourceImpl(sl()));
   sl.registerLazySingleton<TestStepRemoteDataSource>(
-          () => TestStepRemoteDataSourceImpl(
-        httpClient: sl(),
-        tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
-      ));
+        () => TestStepRemoteDataSourceImpl(
+      graphClient: sl<GraphClient>(),
+    ),
+  );
+
 
 
   sl.registerLazySingleton<TestStepRepository>(
@@ -265,10 +281,10 @@ Future<void> init() async {
 
   sl.registerLazySingleton<CommentsRemoteDataSource>(
         () => CommentsRemoteDataSourceImpl(
-      httpClient: sl(),
-      tokenProvider: () async => sl<AuthRepository>().getValidAccessToken(),
+      graphClient: sl<GraphClient>(),
     ),
   );
+
 
 
   sl.registerLazySingleton(() => GetCommentsForCase(sl()));

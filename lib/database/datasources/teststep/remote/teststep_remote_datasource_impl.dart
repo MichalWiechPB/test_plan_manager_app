@@ -1,117 +1,59 @@
-import 'package:dio/dio.dart';
+import 'package:test_plan_manager_app/core/config/graph_client.dart';
+import 'package:test_plan_manager_app/database/datasources/teststep/remote/teststep_remote_datasource.dart';
 import 'package:test_plan_manager_app/features/test_step_list/data/models/dtos/test_step_dto.dart';
-import 'teststep_remote_datasource.dart';
 
 class TestStepRemoteDataSourceImpl implements TestStepRemoteDataSource {
-  final Dio httpClient;
-  final Future<String> Function() tokenProvider;
+  final GraphClient graphClient;
 
   TestStepRemoteDataSourceImpl({
-    required this.httpClient,
-    required this.tokenProvider,
+    required this.graphClient,
   });
-
-  static const _siteId =
-      "wiechmichal01gmail.sharepoint.com,"
-      "53d02a82-2aa5-49bf-abd9-0edf67d7e2e7,"
-      "cac5f5b6-314f-43f2-a373-48ffb18f5d0a";
 
   static const _testStepsListId = "7c8bed07-f4a9-4133-bf78-f0fcfe1dd72a";
 
-  String get _itemsUrl =>
-      "https://graph.microsoft.com/v1.0/sites/$_siteId/lists/$_testStepsListId/items?expand=fields";
-
-  String _updateUrl(String id) =>
-      "https://graph.microsoft.com/v1.0/sites/$_siteId/lists/$_testStepsListId/items/$id/fields";
-
-  String _deleteUrl(String id) =>
-      "https://graph.microsoft.com/v1.0/sites/$_siteId/lists/$_testStepsListId/items/$id";
-
   @override
   Future<List<TestStepDto>> fetchStepsForCase(String testCaseId) async {
-    final token = await tokenProvider();
-
-    final res = await httpClient.get(
-      _itemsUrl,
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "ConsistencyLevel": "eventual",
-        },
-      ),
+    final items = await graphClient.getListItems(
+      listId: _testStepsListId,
+      withConsistencyLevel: true,
     );
 
-    final List data = res.data["value"];
-    final dtos = data.map((e) => TestStepDto.fromGraphJson(e)).toList();
-    return dtos.where((s) => s.testCaseId == testCaseId).toList();
+    return items
+        .map((e) => TestStepDto.fromGraphJson(e as Map<String, dynamic>))
+        .where((s) => s.testCaseId == testCaseId)
+        .toList();
   }
 
   @override
   Future<TestStepDto> createStep(TestStepDto dto) async {
-    final token = await tokenProvider();
-
-    final res = await httpClient.post(
-      _itemsUrl,
-      data: dto.toGraphCreateJson(),
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "Content-Type": "application/json",
-        },
-      ),
+    final json = await graphClient.createListItem(
+      listId: _testStepsListId,
+      body: dto.toGraphCreateJson(),
     );
 
-    return TestStepDto.fromGraphJson(res.data);
+    return TestStepDto.fromGraphJson(json);
   }
 
   @override
   Future<TestStepDto> updateStep(TestStepDto dto) async {
-    final token = await tokenProvider();
-
     if (dto.id == null) {
-      throw Exception("TestStepDto.id cannot be null for update");
+      throw Exception("TestStepDto.id cannot be null");
     }
 
-    try {
-      final res = await httpClient.patch(
-        _updateUrl(dto.id!),
-        data: dto.toGraphUpdateJson(),
-        options: Options(
-          headers: {
-            "Authorization": "Bearer $token",
-            "Content-Type": "application/json",
-            "If-Match": "*",
-          },
-        ),
-      );
+    final json = await graphClient.updateListItemRaw(
+      listId: _testStepsListId,
+      itemId: dto.id!,
+      body: dto.toGraphUpdateJson(),
+    );
 
-      print("PATCH OK status: ${res.statusCode}");
-      print("PATCH data: ${res.data}");
-
-      return TestStepDto.fromGraphFieldsJson(res.data, dto);
-    } catch (e) {
-      print("UPDATE STEP FAILED ❌");
-      print("ERROR: $e");
-      rethrow; // <-- POZWALASZ żeby poszło do repo
-    }
+    return TestStepDto.fromGraphFieldsJson(json, dto);
   }
-
-
-
-
 
   @override
   Future<void> deleteStep(String id) async {
-    final token = await tokenProvider();
-
-    await httpClient.delete(
-      _deleteUrl(id),
-      options: Options(
-        headers: {
-          "Authorization": "Bearer $token",
-          "If-Match": "*",
-        },
-      ),
+    await graphClient.deleteListItem(
+      listId: _testStepsListId,
+      itemId: id,
     );
   }
 }

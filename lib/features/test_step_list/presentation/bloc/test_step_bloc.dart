@@ -36,9 +36,6 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     on<ReorderTestStepsEvent>(_onReorder);
   }
 
-  /// ============================
-  /// GET
-  /// ============================
   Future<void> _onGet(
       GetTestStepsForCaseEvent event,
       Emitter<TestStepState> emit,
@@ -57,9 +54,6 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     );
   }
 
-  /// ============================
-  /// CREATE
-  /// ============================
   Future<void> _onCreate(
       CreateTestStepEvent event,
       Emitter<TestStepState> emit,
@@ -78,9 +72,6 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     );
   }
 
-  /// ============================
-  /// UPDATE
-  /// ============================
   Future<void> _onUpdate(
       UpdateTestStepEvent event,
       Emitter<TestStepState> emit,
@@ -99,9 +90,6 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     );
   }
 
-  /// ============================
-  /// DELETE
-  /// ============================
   Future<void> _onDelete(
       DeleteTestStepEvent event,
       Emitter<TestStepState> emit,
@@ -120,9 +108,6 @@ class TestStepBloc extends Bloc<TestStepEvent, TestStepState> {
     );
   }
 
-  /// ============================
-  /// REORDER
-  /// ============================
   Future<void> _onReorder(
       ReorderTestStepsEvent event,
       Emitter<TestStepState> emit,
