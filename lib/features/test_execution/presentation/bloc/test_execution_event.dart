@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import '../../../project_list/domain/entities/project.dart';
 import '../../domain/entities/project_structure.dart';
 
 part 'test_execution_event.freezed.dart';

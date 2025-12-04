@@ -256,9 +256,22 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
       Emitter<ModuleState> emit,
       ) async {
     final res = await deleteTestPlan(DeleteTestPlanParams(event.testPlanId));
+
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(),
+          (_) {
+        final current = state;
+        if (current is! ModuleSuccess) return;
+
+        final parentModuleId = event.moduleId;
+
+        if (parentModuleId.isEmpty) {
+          _refresh();
+        } else {
+          _refresh(parentModuleId: parentModuleId);
+        }
+      },
     );
   }
+
 }

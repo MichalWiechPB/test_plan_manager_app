@@ -205,21 +205,62 @@ class TestPlanTile extends StatelessWidget {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Usuń plan testów'),
-        content: Text('Czy na pewno chcesz usunąć "${plan.name}"?'),
+        backgroundColor: AppColors.softViolet.withOpacity(0.95),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(18),
+        ),
+        title: const Text(
+          'Usuń plan testów',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.5,
+          ),
+        ),
+        content: Text(
+          'Czy na pewno chcesz usunąć "${plan.name}"?',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 15,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Anuluj'),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(
+                color: Colors.white70,
+                fontSize: 15,
+              ),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
               context.read<ModuleBloc>().add(
-                ModuleEvent.deleteTestPlan(testPlanId: plan.id),
+                ModuleEvent.deleteTestPlan(
+                  testPlanId: plan.id,
+                  moduleId: moduleId,
+                ),
               );
               Navigator.pop(ctx);
             },
-            child: const Text('Usuń'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warmBeige,
+              foregroundColor: Colors.black,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+            ),
+            child: const Text(
+              'Usuń',
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 15,
+              ),
+            ),
           ),
         ],
       ),

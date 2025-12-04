@@ -48,7 +48,9 @@ sealed class ModuleEvent with _$ModuleEvent {
 
   const factory ModuleEvent.deleteTestPlan({
     required String testPlanId,
+    required String moduleId, // ważne!
   }) = DeleteTestPlanEvent;
+
 
   const factory ModuleEvent.pushVisited({
     required VisitedModule module,

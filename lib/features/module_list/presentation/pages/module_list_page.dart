@@ -355,12 +355,41 @@ class _ModuleListPageState extends State<ModuleListPage> {
     showDialog(
       context: ctx,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Nowy plan testów'),
-        content: TextField(controller: nameCtrl),
+        backgroundColor: AppColors.softViolet.withOpacity(0.95),
+        title: const Text(
+          'Nowy plan testów',
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Nazwa planu',
+                labelStyle: const TextStyle(color: Colors.white70),
+                hintText: 'Wpisz nazwę...',
+                hintStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: AppColors.warmBeige, width: 2),
+                ),
+              ),
+            ),
+          ],
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Anuluj'),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -379,6 +408,10 @@ class _ModuleListPageState extends State<ModuleListPage> {
 
               Navigator.pop(dialogCtx);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warmBeige,
+              foregroundColor: Colors.black,
+            ),
             child: const Text('Dodaj'),
           ),
         ],
