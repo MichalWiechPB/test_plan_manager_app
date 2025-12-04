@@ -475,28 +475,24 @@ class _ExecutionPageState extends State<ExecutionPage> {
     );
   }
 
-  Widget _statusBtn(String label, MaterialColor color, TestStepEntity s, String? selected) {
+  Widget _statusBtn(
+      String label, MaterialColor color, TestStepEntity s, String? selected) {
     final active = selected == label;
 
-    return GestureDetector(
-      onTap: () => _update(s, label),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 14),
-        decoration: BoxDecoration(
-          color: active ? color.shade600 : color.shade300.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: active ? Colors.white : color.shade200,
-            fontWeight: FontWeight.w600,
-          ),
+    return ChoiceChip(
+      label: Text(
+        label,
+        style: TextStyle(
+          color: active ? Colors.white : color.shade200,
+          fontWeight: FontWeight.w600,
         ),
       ),
+      selected: active,
+      selectedColor: color.shade600,
+      backgroundColor: color.shade300.withOpacity(0.4),
+      onSelected: (_) => _update(s, label),
     );
   }
-
 
   void _update(TestStepEntity s, String st) {
     setState(() {

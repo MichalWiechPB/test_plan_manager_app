@@ -149,15 +149,15 @@ return resetVisited(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module)?  updateModule,TResult Function( String moduleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,TResult Function( VisitedModule module)?  pushVisited,TResult Function()?  popVisited,TResult Function()?  resetVisited,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String projectId,  String? projectName)?  getModulesForProject,TResult Function( String moduleId)?  getSubmodulesForModule,TResult Function( String moduleId)?  loadPreviewForModule,TResult Function( ModuleEntity module)?  createModule,TResult Function( ModuleEntity module,  String? parentModuleId)?  updateModule,TResult Function( String moduleId,  String? parentModuleId)?  deleteModule,TResult Function( TestPlanEntity plan)?  createTestPlan,TResult Function( TestPlanEntity plan)?  updateTestPlan,TResult Function( String testPlanId)?  deleteTestPlan,TResult Function( VisitedModule module)?  pushVisited,TResult Function()?  popVisited,TResult Function()?  resetVisited,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
 return loadPreviewForModule(_that.moduleId);case CreateModuleEvent() when createModule != null:
 return createModule(_that.module);case UpdateModuleEvent() when updateModule != null:
-return updateModule(_that.module);case DeleteModuleEvent() when deleteModule != null:
-return deleteModule(_that.moduleId);case CreateTestPlanEvent() when createTestPlan != null:
+return updateModule(_that.module,_that.parentModuleId);case DeleteModuleEvent() when deleteModule != null:
+return deleteModule(_that.moduleId,_that.parentModuleId);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that.plan);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent() when deleteTestPlan != null:
 return deleteTestPlan(_that.testPlanId);case PushVisitedEvent() when pushVisited != null:
@@ -181,15 +181,15 @@ return resetVisited();case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module)  updateModule,required TResult Function( String moduleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,required TResult Function( VisitedModule module)  pushVisited,required TResult Function()  popVisited,required TResult Function()  resetVisited,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String projectId,  String? projectName)  getModulesForProject,required TResult Function( String moduleId)  getSubmodulesForModule,required TResult Function( String moduleId)  loadPreviewForModule,required TResult Function( ModuleEntity module)  createModule,required TResult Function( ModuleEntity module,  String? parentModuleId)  updateModule,required TResult Function( String moduleId,  String? parentModuleId)  deleteModule,required TResult Function( TestPlanEntity plan)  createTestPlan,required TResult Function( TestPlanEntity plan)  updateTestPlan,required TResult Function( String testPlanId)  deleteTestPlan,required TResult Function( VisitedModule module)  pushVisited,required TResult Function()  popVisited,required TResult Function()  resetVisited,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent():
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent():
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent():
 return loadPreviewForModule(_that.moduleId);case CreateModuleEvent():
 return createModule(_that.module);case UpdateModuleEvent():
-return updateModule(_that.module);case DeleteModuleEvent():
-return deleteModule(_that.moduleId);case CreateTestPlanEvent():
+return updateModule(_that.module,_that.parentModuleId);case DeleteModuleEvent():
+return deleteModule(_that.moduleId,_that.parentModuleId);case CreateTestPlanEvent():
 return createTestPlan(_that.plan);case UpdateTestPlanEvent():
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent():
 return deleteTestPlan(_that.testPlanId);case PushVisitedEvent():
@@ -209,15 +209,15 @@ return resetVisited();}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module)?  updateModule,TResult? Function( String moduleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,TResult? Function( VisitedModule module)?  pushVisited,TResult? Function()?  popVisited,TResult? Function()?  resetVisited,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String projectId,  String? projectName)?  getModulesForProject,TResult? Function( String moduleId)?  getSubmodulesForModule,TResult? Function( String moduleId)?  loadPreviewForModule,TResult? Function( ModuleEntity module)?  createModule,TResult? Function( ModuleEntity module,  String? parentModuleId)?  updateModule,TResult? Function( String moduleId,  String? parentModuleId)?  deleteModule,TResult? Function( TestPlanEntity plan)?  createTestPlan,TResult? Function( TestPlanEntity plan)?  updateTestPlan,TResult? Function( String testPlanId)?  deleteTestPlan,TResult? Function( VisitedModule module)?  pushVisited,TResult? Function()?  popVisited,TResult? Function()?  resetVisited,}) {final _that = this;
 switch (_that) {
 case GetModulesForProjectEvent() when getModulesForProject != null:
 return getModulesForProject(_that.projectId,_that.projectName);case GetSubmodulesForModuleEvent() when getSubmodulesForModule != null:
 return getSubmodulesForModule(_that.moduleId);case LoadPreviewForModuleEvent() when loadPreviewForModule != null:
 return loadPreviewForModule(_that.moduleId);case CreateModuleEvent() when createModule != null:
 return createModule(_that.module);case UpdateModuleEvent() when updateModule != null:
-return updateModule(_that.module);case DeleteModuleEvent() when deleteModule != null:
-return deleteModule(_that.moduleId);case CreateTestPlanEvent() when createTestPlan != null:
+return updateModule(_that.module,_that.parentModuleId);case DeleteModuleEvent() when deleteModule != null:
+return deleteModule(_that.moduleId,_that.parentModuleId);case CreateTestPlanEvent() when createTestPlan != null:
 return createTestPlan(_that.plan);case UpdateTestPlanEvent() when updateTestPlan != null:
 return updateTestPlan(_that.plan);case DeleteTestPlanEvent() when deleteTestPlan != null:
 return deleteTestPlan(_that.testPlanId);case PushVisitedEvent() when pushVisited != null:
@@ -501,10 +501,11 @@ as ModuleEntity,
 
 
 class UpdateModuleEvent implements ModuleEvent {
-  const UpdateModuleEvent({required this.module});
+  const UpdateModuleEvent({required this.module, this.parentModuleId});
   
 
  final  ModuleEntity module;
+ final  String? parentModuleId;
 
 /// Create a copy of ModuleEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -516,16 +517,16 @@ $UpdateModuleEventCopyWith<UpdateModuleEvent> get copyWith => _$UpdateModuleEven
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateModuleEvent&&(identical(other.module, module) || other.module == module));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is UpdateModuleEvent&&(identical(other.module, module) || other.module == module)&&(identical(other.parentModuleId, parentModuleId) || other.parentModuleId == parentModuleId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,module);
+int get hashCode => Object.hash(runtimeType,module,parentModuleId);
 
 @override
 String toString() {
-  return 'ModuleEvent.updateModule(module: $module)';
+  return 'ModuleEvent.updateModule(module: $module, parentModuleId: $parentModuleId)';
 }
 
 
@@ -536,7 +537,7 @@ abstract mixin class $UpdateModuleEventCopyWith<$Res> implements $ModuleEventCop
   factory $UpdateModuleEventCopyWith(UpdateModuleEvent value, $Res Function(UpdateModuleEvent) _then) = _$UpdateModuleEventCopyWithImpl;
 @useResult
 $Res call({
- ModuleEntity module
+ ModuleEntity module, String? parentModuleId
 });
 
 
@@ -553,10 +554,11 @@ class _$UpdateModuleEventCopyWithImpl<$Res>
 
 /// Create a copy of ModuleEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? module = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? module = null,Object? parentModuleId = freezed,}) {
   return _then(UpdateModuleEvent(
 module: null == module ? _self.module : module // ignore: cast_nullable_to_non_nullable
-as ModuleEntity,
+as ModuleEntity,parentModuleId: freezed == parentModuleId ? _self.parentModuleId : parentModuleId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 
@@ -567,10 +569,11 @@ as ModuleEntity,
 
 
 class DeleteModuleEvent implements ModuleEvent {
-  const DeleteModuleEvent({required this.moduleId});
+  const DeleteModuleEvent({required this.moduleId, this.parentModuleId});
   
 
  final  String moduleId;
+ final  String? parentModuleId;
 
 /// Create a copy of ModuleEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -582,16 +585,16 @@ $DeleteModuleEventCopyWith<DeleteModuleEvent> get copyWith => _$DeleteModuleEven
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeleteModuleEvent&&(identical(other.moduleId, moduleId) || other.moduleId == moduleId));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeleteModuleEvent&&(identical(other.moduleId, moduleId) || other.moduleId == moduleId)&&(identical(other.parentModuleId, parentModuleId) || other.parentModuleId == parentModuleId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,moduleId);
+int get hashCode => Object.hash(runtimeType,moduleId,parentModuleId);
 
 @override
 String toString() {
-  return 'ModuleEvent.deleteModule(moduleId: $moduleId)';
+  return 'ModuleEvent.deleteModule(moduleId: $moduleId, parentModuleId: $parentModuleId)';
 }
 
 
@@ -602,7 +605,7 @@ abstract mixin class $DeleteModuleEventCopyWith<$Res> implements $ModuleEventCop
   factory $DeleteModuleEventCopyWith(DeleteModuleEvent value, $Res Function(DeleteModuleEvent) _then) = _$DeleteModuleEventCopyWithImpl;
 @useResult
 $Res call({
- String moduleId
+ String moduleId, String? parentModuleId
 });
 
 
@@ -619,10 +622,11 @@ class _$DeleteModuleEventCopyWithImpl<$Res>
 
 /// Create a copy of ModuleEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? moduleId = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? moduleId = null,Object? parentModuleId = freezed,}) {
   return _then(DeleteModuleEvent(
 moduleId: null == moduleId ? _self.moduleId : moduleId // ignore: cast_nullable_to_non_nullable
-as String,
+as String,parentModuleId: freezed == parentModuleId ? _self.parentModuleId : parentModuleId // ignore: cast_nullable_to_non_nullable
+as String?,
   ));
 }
 

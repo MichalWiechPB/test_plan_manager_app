@@ -46,7 +46,6 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
   }) : super(const ModuleState.initial()) {
     on<GetModulesForProjectEvent>(_onGetModules);
     on<GetSubmodulesForModuleEvent>(_onGetSubmodules);
-    on<LoadPreviewForModuleEvent>(_onPreviewForModule);
 
     on<PushVisitedEvent>(_onPushVisited);
     on<PopVisitedEvent>(_onPopVisited);
@@ -59,6 +58,8 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     on<CreateTestPlanEvent>(_onCreateTestPlan);
     on<UpdateTestPlanEvent>(_onUpdateTestPlan);
     on<DeleteTestPlanEvent>(_onDeleteTestPlan);
+
+    on<LoadPreviewForModuleEvent>(_onPreviewForModule);
   }
 
   Future<void> _onGetModules(
@@ -69,17 +70,50 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
 
     await emit.forEach<List<ModuleEntity>>(
       getModulesForProject(ProjectIdParams(event.projectId)),
-      onData: (modules) {
-        return ModuleState.success(
-          modules: modules,
-          submodules: const {},
-          testPlans: const {},
-          visitedModules: const [],
-          currentProjectId: event.projectId,
-          projectName: event.projectName,
-        );
-      },
-      onError: (err, _) => ModuleState.failure(errorMessage: err.toString()),
+      onData: (modules) => ModuleState.success(
+        modules: modules,
+        submodules: const {},
+        testPlans: const {},
+        visitedModules: const [],
+        currentProjectId: event.projectId,
+        projectName: event.projectName,
+      ),
+      onError: (e, _) => ModuleState.failure(errorMessage: e.toString()),
+    );
+  }
+
+  Future<void> _onGetSubmodules(
+      GetSubmodulesForModuleEvent event,
+      Emitter<ModuleState> emit,
+      ) async {
+    final current = state;
+    if (current is! ModuleSuccess) return;
+
+    final subs = await getSubmodulesForModule(ParentModuleIdParams(event.moduleId));
+
+    String? error;
+    List<ModuleEntity> list = [];
+
+    subs.fold(
+          (f) => error = f.message,
+          (modules) => list = modules,
+    );
+
+    if (error != null) {
+      emit(ModuleState.failure(errorMessage: error!));
+      return;
+    }
+
+    final updatedSubs = Map<String, List<ModuleEntity>>.from(current.submodules);
+    updatedSubs[event.moduleId] = list;
+
+    await emit.forEach<List<TestPlanEntity>>(
+      getTestPlansForModule(ModuleIdParams(event.moduleId)),
+      onData: (plans) => current.copyWith(
+        submodules: updatedSubs,
+        testPlans: {...current.testPlans, event.moduleId: plans},
+      ),
+      onError: (e, _) => ModuleState.failure(errorMessage: e.toString()),
     );
   }
 
@@ -101,88 +135,41 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
     );
   }
 
-  Future<void> _onGetSubmodules(
-      GetSubmodulesForModuleEvent event,
-      Emitter<ModuleState> emit,
-      ) async {
+
+  void _onPushVisited(PushVisitedEvent event, Emitter<ModuleState> emit) {
     final current = state;
-    if (current is! ModuleSuccess) return;
-
-    final subs = await getSubmodulesForModule(ParentModuleIdParams(event.moduleId));
-
-    String? error;
-    final updatedSubs = Map.of(current.submodules);
-
-    subs.fold(
-          (f) => error = f.message,
-          (list) => updatedSubs[event.moduleId] = list,
-    );
-
-    if (error != null) {
-      emit(ModuleState.failure(errorMessage: error!));
-      return;
+    if (current is ModuleSuccess) {
+      emit(current.copyWith(visitedModules: [...current.visitedModules, event.module]));
     }
-
-    await emit.forEach<List<TestPlanEntity>>(
-      getTestPlansForModule(ModuleIdParams(event.moduleId)),
-      onData: (plans) {
-        return current.copyWith(
-          submodules: updatedSubs,
-          testPlans: {...current.testPlans, event.moduleId: plans},
-        );
-      },
-      onError: (err, _) => ModuleState.failure(errorMessage: err.toString()),
-    );
   }
 
-  void _onPushVisited(
-      PushVisitedEvent event,
-      Emitter<ModuleState> emit,
-      ) {
+  void _onPopVisited(PopVisitedEvent event, Emitter<ModuleState> emit) {
     final current = state;
-    if (current is! ModuleSuccess) return;
-
-    final updated = [...current.visitedModules, event.module];
-    emit(current.copyWith(visitedModules: updated));
-  }
-
-  void _onPopVisited(
-      PopVisitedEvent event,
-      Emitter<ModuleState> emit,
-      ) {
-    final current = state;
-    if (current is! ModuleSuccess) return;
-
-    final updated = List<VisitedModule>.from(current.visitedModules);
-    if (updated.isNotEmpty) {
-      updated.removeLast();
+    if (current is ModuleSuccess) {
+      final updated = [...current.visitedModules];
+      if (updated.isNotEmpty) updated.removeLast();
+      emit(current.copyWith(visitedModules: updated));
     }
-    emit(current.copyWith(visitedModules: updated));
   }
 
-  void _onResetVisited(
-      ResetVisitedEvent event,
-      Emitter<ModuleState> emit,
-      ) {
+  void _onResetVisited(ResetVisitedEvent event, Emitter<ModuleState> emit) {
+    final current = state;
+    if (current is ModuleSuccess) {
+      emit(current.copyWith(visitedModules: []));
+    }
+  }
+
+  void _refresh({String? parentModuleId}) {
     final current = state;
     if (current is! ModuleSuccess) return;
 
-    emit(current.copyWith(visitedModules: []));
-  }
-
-  Future<void> _refresh([String? parentModule]) async {
-    final current = state;
-    if (current is! ModuleSuccess) return;
-
-    if (parentModule == null) {
-      add(
-        ModuleEvent.getModulesForProject(
-          projectId: current.currentProjectId!,
-          projectName: current.projectName,
-        ),
-      );
+    if (parentModuleId == null) {
+      add(GetModulesForProjectEvent(
+        projectId: current.currentProjectId!,
+        projectName: current.projectName,
+      ));
     } else {
-      add(ModuleEvent.getSubmodulesForModule(moduleId: parentModule));
+      add(GetSubmodulesForModuleEvent(moduleId: parentModuleId));
     }
   }
 
@@ -191,10 +178,9 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
       Emitter<ModuleState> emit,
       ) async {
     final res = await createModule(CreateModuleParams(event.module));
-
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(event.module.parentModuleId),
+          (_) => _refresh(parentModuleId: event.module.parentModuleId),
     );
   }
 
@@ -206,9 +192,18 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
 
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(event.module.parentModuleId),
+          (_) {
+        final parentId = event.parentModuleId ?? event.module.parentModuleId;
+
+        if (parentId == null) {
+          _refresh(); // root
+        } else {
+          _refresh(parentModuleId: parentId); // submodules
+        }
+      },
     );
   }
+
 
   Future<void> _onDeleteModule(
       DeleteModuleEvent event,
@@ -218,19 +213,30 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
 
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(),
+          (_) {
+        final current = state;
+        if (current is! ModuleSuccess) return;
+
+        final parentId = event.parentModuleId;
+
+        if (parentId == null) {
+          _refresh(); // root
+        } else {
+          _refresh(parentModuleId: parentId);
+        }
+      },
     );
   }
+
 
   Future<void> _onCreateTestPlan(
       CreateTestPlanEvent event,
       Emitter<ModuleState> emit,
       ) async {
     final res = await createTestPlan(CreateTestPlanParams(event.plan));
-
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(event.plan.moduleId),
+          (_) => _refresh(parentModuleId: event.plan.moduleId),
     );
   }
 
@@ -239,10 +245,9 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
       Emitter<ModuleState> emit,
       ) async {
     final res = await updateTestPlan(UpdateTestPlanParams(event.plan));
-
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
-          (_) => _refresh(event.plan.moduleId),
+          (_) => _refresh(parentModuleId: event.plan.moduleId),
     );
   }
 
@@ -250,10 +255,7 @@ class ModuleBloc extends Bloc<ModuleEvent, ModuleState> {
       DeleteTestPlanEvent event,
       Emitter<ModuleState> emit,
       ) async {
-    emit(const ModuleState.loading());
-
     final res = await deleteTestPlan(DeleteTestPlanParams(event.testPlanId));
-
     res.fold(
           (f) => emit(ModuleState.failure(errorMessage: f.message ?? 'error')),
           (_) => _refresh(),

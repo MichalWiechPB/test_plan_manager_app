@@ -19,5 +19,6 @@ sealed class TestPlanEvent with _$TestPlanEvent {
 
   const factory TestPlanEvent.deleteTestCase({
     required String id,
+    required String planId,
   }) = DeleteTestCaseEvent;
 }

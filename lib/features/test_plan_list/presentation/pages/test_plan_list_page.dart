@@ -316,25 +316,61 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.softViolet.withOpacity(0.95),
-        title: const Text('Nowy przypadek testowy', style: TextStyle(color: Colors.white)),
+        title: const Text(
+          'Nowy przypadek testowy',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Tytuł'),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Tytuł',
+                hintText: 'Podaj nazwę przypadku...',
+                labelStyle: const TextStyle(color: Colors.white70),
+                hintStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: AppColors.warmBeige, width: 2),
+                ),
+              ),
             ),
-            const SizedBox(height: 8),
+
+            const SizedBox(height: 12),
+
             TextField(
               controller: expectedCtrl,
-              decoration: const InputDecoration(labelText: 'Oczekiwany wynik'),
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Oczekiwany wynik',
+                hintText: 'Co powinno się wydarzyć?',
+                labelStyle: const TextStyle(color: Colors.white70),
+                hintStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: AppColors.warmBeige, width: 2),
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Anuluj', style: TextStyle(color: Colors.white70)),
+            child: const Text(
+              'Anuluj',
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -346,9 +382,8 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
                 planId: widget.planId,
                 title: title,
                 status: 'Pending',
-                expectedResult: expectedCtrl.text.trim().isNotEmpty
-                    ? expectedCtrl.text
-                    : null,
+                expectedResult:
+                expectedCtrl.text.trim().isNotEmpty ? expectedCtrl.text : null,
                 assignedToUserId: null,
                 lastModifiedUtc: DateTime.now().toUtc(),
                 parentCaseId: null,
@@ -360,10 +395,15 @@ class _TestPlanListPageState extends State<TestPlanListPage> {
 
               Navigator.pop(ctx);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warmBeige,
+              foregroundColor: Colors.black,
+            ),
             child: const Text('Zapisz'),
           )
         ],
       ),
     );
   }
+
 }

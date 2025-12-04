@@ -35,7 +35,7 @@ class _TestCasePageState extends State<TestCasePage> {
         elevation: 0,
         centerTitle: true,
         title: const Text(
-          "Kroki testowe",
+          "Test Steps",
           style: TextStyle(
             color: Colors.white,
             fontWeight: FontWeight.w700,

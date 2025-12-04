@@ -125,13 +125,13 @@ return deleteTestCase(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String planId)?  getTestCasesForPlan,TResult Function( TestCaseEntity testCase)?  createTestCase,TResult Function( TestCaseEntity testCase)?  updateTestCase,TResult Function( String id)?  deleteTestCase,required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>({TResult Function( String planId)?  getTestCasesForPlan,TResult Function( TestCaseEntity testCase)?  createTestCase,TResult Function( TestCaseEntity testCase)?  updateTestCase,TResult Function( String id,  String planId)?  deleteTestCase,required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case GetTestCasesForPlanEvent() when getTestCasesForPlan != null:
 return getTestCasesForPlan(_that.planId);case CreateTestCaseEvent() when createTestCase != null:
 return createTestCase(_that.testCase);case UpdateTestCaseEvent() when updateTestCase != null:
 return updateTestCase(_that.testCase);case DeleteTestCaseEvent() when deleteTestCase != null:
-return deleteTestCase(_that.id);case _:
+return deleteTestCase(_that.id,_that.planId);case _:
   return orElse();
 
 }
@@ -149,13 +149,13 @@ return deleteTestCase(_that.id);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String planId)  getTestCasesForPlan,required TResult Function( TestCaseEntity testCase)  createTestCase,required TResult Function( TestCaseEntity testCase)  updateTestCase,required TResult Function( String id)  deleteTestCase,}) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>({required TResult Function( String planId)  getTestCasesForPlan,required TResult Function( TestCaseEntity testCase)  createTestCase,required TResult Function( TestCaseEntity testCase)  updateTestCase,required TResult Function( String id,  String planId)  deleteTestCase,}) {final _that = this;
 switch (_that) {
 case GetTestCasesForPlanEvent():
 return getTestCasesForPlan(_that.planId);case CreateTestCaseEvent():
 return createTestCase(_that.testCase);case UpdateTestCaseEvent():
 return updateTestCase(_that.testCase);case DeleteTestCaseEvent():
-return deleteTestCase(_that.id);}
+return deleteTestCase(_that.id,_that.planId);}
 }
 /// A variant of `when` that fallback to returning `null`
 ///
@@ -169,13 +169,13 @@ return deleteTestCase(_that.id);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String planId)?  getTestCasesForPlan,TResult? Function( TestCaseEntity testCase)?  createTestCase,TResult? Function( TestCaseEntity testCase)?  updateTestCase,TResult? Function( String id)?  deleteTestCase,}) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>({TResult? Function( String planId)?  getTestCasesForPlan,TResult? Function( TestCaseEntity testCase)?  createTestCase,TResult? Function( TestCaseEntity testCase)?  updateTestCase,TResult? Function( String id,  String planId)?  deleteTestCase,}) {final _that = this;
 switch (_that) {
 case GetTestCasesForPlanEvent() when getTestCasesForPlan != null:
 return getTestCasesForPlan(_that.planId);case CreateTestCaseEvent() when createTestCase != null:
 return createTestCase(_that.testCase);case UpdateTestCaseEvent() when updateTestCase != null:
 return updateTestCase(_that.testCase);case DeleteTestCaseEvent() when deleteTestCase != null:
-return deleteTestCase(_that.id);case _:
+return deleteTestCase(_that.id,_that.planId);case _:
   return null;
 
 }
@@ -385,10 +385,11 @@ as TestCaseEntity,
 
 
 class DeleteTestCaseEvent implements TestPlanEvent {
-  const DeleteTestCaseEvent({required this.id});
+  const DeleteTestCaseEvent({required this.id, required this.planId});
   
 
  final  String id;
+ final  String planId;
 
 /// Create a copy of TestPlanEvent
 /// with the given fields replaced by the non-null parameter values.
@@ -400,16 +401,16 @@ $DeleteTestCaseEventCopyWith<DeleteTestCaseEvent> get copyWith => _$DeleteTestCa
 
 @override
 bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeleteTestCaseEvent&&(identical(other.id, id) || other.id == id));
+  return identical(this, other) || (other.runtimeType == runtimeType&&other is DeleteTestCaseEvent&&(identical(other.id, id) || other.id == id)&&(identical(other.planId, planId) || other.planId == planId));
 }
 
 
 @override
-int get hashCode => Object.hash(runtimeType,id);
+int get hashCode => Object.hash(runtimeType,id,planId);
 
 @override
 String toString() {
-  return 'TestPlanEvent.deleteTestCase(id: $id)';
+  return 'TestPlanEvent.deleteTestCase(id: $id, planId: $planId)';
 }
 
 
@@ -420,7 +421,7 @@ abstract mixin class $DeleteTestCaseEventCopyWith<$Res> implements $TestPlanEven
   factory $DeleteTestCaseEventCopyWith(DeleteTestCaseEvent value, $Res Function(DeleteTestCaseEvent) _then) = _$DeleteTestCaseEventCopyWithImpl;
 @useResult
 $Res call({
- String id
+ String id, String planId
 });
 
 
@@ -437,9 +438,10 @@ class _$DeleteTestCaseEventCopyWithImpl<$Res>
 
 /// Create a copy of TestPlanEvent
 /// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') $Res call({Object? id = null,}) {
+@pragma('vm:prefer-inline') $Res call({Object? id = null,Object? planId = null,}) {
   return _then(DeleteTestCaseEvent(
 id: null == id ? _self.id : id // ignore: cast_nullable_to_non_nullable
+as String,planId: null == planId ? _self.planId : planId // ignore: cast_nullable_to_non_nullable
 as String,
   ));
 }

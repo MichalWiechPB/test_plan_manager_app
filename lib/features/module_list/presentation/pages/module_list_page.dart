@@ -262,18 +262,58 @@ class _ModuleListPageState extends State<ModuleListPage> {
     showDialog(
       context: ctx,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Nowy moduł'),
+        backgroundColor: AppColors.softViolet.withOpacity(0.95),
+        title: const Text(
+          'Nowy moduł',
+          style: TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(controller: nameCtrl),
-            TextField(controller: descCtrl),
+            TextField(
+              controller: nameCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Nazwa modułu',
+                labelStyle: const TextStyle(color: Colors.white70),
+                hintText: 'Wpisz nazwę...',
+                hintStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: AppColors.warmBeige, width: 2),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: descCtrl,
+              maxLines: 2,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                labelText: 'Opis (opcjonalnie)',
+                labelStyle: const TextStyle(color: Colors.white70),
+                hintText: 'Dodaj opis...',
+                hintStyle: const TextStyle(color: Colors.white54),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide(color: Colors.white.withOpacity(0.3)),
+                ),
+                focusedBorder: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                  borderSide: BorderSide(color: AppColors.warmBeige, width: 2),
+                ),
+              ),
+            ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx),
-            child: const Text('Anuluj'),
+            child: const Text('Anuluj', style: TextStyle(color: Colors.white70)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -287,7 +327,7 @@ class _ModuleListPageState extends State<ModuleListPage> {
                     name: name,
                     description: descCtrl.text.trim().isEmpty
                         ? null
-                        : descCtrl.text,
+                        : descCtrl.text.trim(),
                     projectId: widget.projectId,
                     parentModuleId: widget.moduleId,
                   ),
@@ -296,12 +336,18 @@ class _ModuleListPageState extends State<ModuleListPage> {
 
               Navigator.pop(dialogCtx);
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.warmBeige,
+              foregroundColor: Colors.black,
+            ),
             child: const Text('Dodaj'),
           ),
         ],
       ),
     );
   }
+
+
 
   void _openCreatePlanDialog(BuildContext ctx) {
     final nameCtrl = TextEditingController();

@@ -231,24 +231,51 @@ class _ModuleTileState extends State<ModuleTile> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.softViolet.withOpacity(0.95),
-        title: const Text("Edytuj moduł", style: TextStyle(color: Colors.white)),
+        title: const Text(
+          "Edytuj moduł",
+          style: TextStyle(color: Colors.white),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: nameCtrl,
-              decoration: const InputDecoration(labelText: 'Nazwa'),
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Nazwa',
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white38),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
             ),
+            const SizedBox(height: 12),
             TextField(
               controller: descCtrl,
-              decoration: const InputDecoration(labelText: 'Opis'),
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                labelText: 'Opis',
+                labelStyle: TextStyle(color: Colors.white70),
+                enabledBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white38),
+                ),
+                focusedBorder: UnderlineInputBorder(
+                  borderSide: BorderSide(color: Colors.white),
+                ),
+              ),
             ),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text("Anuluj", style: TextStyle(color: Colors.white)),
+            child: const Text(
+              "Anuluj",
+              style: TextStyle(color: Colors.white70),
+            ),
           ),
           ElevatedButton(
             onPressed: () {
@@ -262,9 +289,13 @@ class _ModuleTileState extends State<ModuleTile> {
                 parentModuleId: widget.module.parentModuleId,
               );
 
-              context
-                  .read<ModuleBloc>()
-                  .add(ModuleEvent.updateModule(module: updated));
+              context.read<ModuleBloc>().add(
+                ModuleEvent.updateModule(
+                  module: updated,
+                  parentModuleId: widget.module.parentModuleId,
+                ),
+              );
+
               Navigator.pop(ctx);
             },
             child: const Text("Zapisz"),
@@ -273,6 +304,7 @@ class _ModuleTileState extends State<ModuleTile> {
       ),
     );
   }
+
 
   void _confirmDelete(BuildContext context) {
     showDialog(
@@ -293,7 +325,7 @@ class _ModuleTileState extends State<ModuleTile> {
             onPressed: () {
               context
                   .read<ModuleBloc>()
-                  .add(ModuleEvent.deleteModule(moduleId: widget.module.id));
+                  .add(ModuleEvent.deleteModule(moduleId: widget.module.id, parentModuleId: widget.module.parentModuleId));
               Navigator.pop(ctx);
             },
             child: const Text("Usuń"),

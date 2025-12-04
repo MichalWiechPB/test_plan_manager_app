@@ -50,7 +50,6 @@ class _ProjectListPageState extends State<ProjectListPage> {
         appBar: AppBar(
           backgroundColor: Colors.white.withOpacity(0.06),
           elevation: 0,
-          centerTitle: true,
           title: const Text(
             'Projects',
             style: TextStyle(
@@ -61,14 +60,7 @@ class _ProjectListPageState extends State<ProjectListPage> {
             ),
           ),
 
-          // LEADING: powrót
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white),
-            onPressed: () => context.pop(),
-          ),
-
           actions: [
-            /// ▶ START TEST EXECUTION
             Padding(
               padding: const EdgeInsets.only(right: 10),
               child: GestureDetector(
@@ -95,7 +87,6 @@ class _ProjectListPageState extends State<ProjectListPage> {
               ),
             ),
 
-            /// ➕ ADD PROJECT
             Padding(
               padding: const EdgeInsets.only(right: 12),
               child: GestureDetector(

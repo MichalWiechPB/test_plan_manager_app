@@ -28,11 +28,15 @@ sealed class ModuleEvent with _$ModuleEvent {
 
   const factory ModuleEvent.updateModule({
     required ModuleEntity module,
+    String? parentModuleId,
   }) = UpdateModuleEvent;
+
 
   const factory ModuleEvent.deleteModule({
     required String moduleId,
+    String? parentModuleId,
   }) = DeleteModuleEvent;
+
 
   const factory ModuleEvent.createTestPlan({
     required TestPlanEntity plan,

@@ -67,26 +67,16 @@ class ModuleRemoteDataSourceImpl implements ModuleRemoteDataSource {
 
   @override
   Future<ModuleDto> updateModule(ModuleDto dto) async {
-    if (dto.id == null) {
-      throw Exception("ModuleDto.id cannot be null");
-    }
-
-    final fields = <String, dynamic>{
-      "Title": dto.name,
-      "name": dto.name,
-      "description": dto.description,
-      "projectId": dto.projectId,
-      "parentModuleId": dto.parentModuleId,
-    }..removeWhere((key, value) => value == null);
-
-    final json = await graphClient.updateListItemFields(
+    final json = await graphClient.updateListItemRaw(
       listId: _modulesListId,
-      itemId: dto.id!,
-      fields: fields,
+      itemId: dto.id,
+      body: dto.toGraphUpdateJson(),
     );
 
     return ModuleDto.fromGraphJson(json);
   }
+
+
 
   @override
   Future<TestPlanDto> updateTestPlan(TestPlanDto dto) async {

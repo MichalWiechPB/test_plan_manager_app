@@ -26,8 +26,9 @@ class ModuleDto {
   Map<String, dynamic> toJson() => _$ModuleDtoToJson(this);
 
   factory ModuleDto.fromGraphJson(Map<String, dynamic> json) {
-    final Map<String, dynamic> fields =
-    json['fields'] is Map<String, dynamic> ? json['fields'] : {};
+
+    final rawFields = json['fields'];
+    final fields = rawFields is Map<String, dynamic> ? rawFields : json;
 
     return ModuleDto(
       id: json['id']?.toString() ?? '',
@@ -53,13 +54,16 @@ class ModuleDto {
 
   Map<String, dynamic> toGraphUpdateJson() {
     return {
-      if (name.isNotEmpty) "name": name,
+      "name": name,
       "description": description,
       "projectId": projectId,
       "parentModuleId": parentModuleId,
       "createdAtUtc": createdAtUtc?.toIso8601String(),
-    };
+    }..removeWhere((k, v) => v == null);
   }
+
+
+
 
   static DateTime? _parseDate(dynamic value) {
     if (value == null) return null;

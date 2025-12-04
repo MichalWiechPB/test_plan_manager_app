@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+
 import 'test_plan_event.dart';
 import 'test_plan_state.dart';
+
 import '../../domain/entities/test_case.dart';
 import '../../domain/usecases/create_test_case.dart';
 import '../../domain/usecases/update_test_case.dart';
@@ -45,20 +47,47 @@ class TestPlanBloc extends Bloc<TestPlanEvent, TestPlanState> {
       CreateTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    await createTestCase(CreateTestCaseParams(event.testCase));
+    emit(const TestPlanState.loading());
+
+    final res = await createTestCase(CreateTestCaseParams(event.testCase));
+
+    res.fold(
+          (f) => emit(TestPlanState.failure(
+        errorMessage: f.message ?? f.toString(),
+      )),
+          (_) => add(TestPlanEvent.getTestCasesForPlan(planId: event.testCase.planId)),
+    );
   }
 
   Future<void> _updateCase(
       UpdateTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    await updateTestCase(UpdateTestCaseParams(event.testCase));
+    emit(const TestPlanState.loading());
+
+    final res = await updateTestCase(UpdateTestCaseParams(event.testCase));
+
+    res.fold(
+          (f) => emit(TestPlanState.failure(
+        errorMessage: f.message ?? f.toString(),
+      )),
+          (_) => add(TestPlanEvent.getTestCasesForPlan(planId: event.testCase.planId)),
+    );
   }
 
   Future<void> _deleteCase(
       DeleteTestCaseEvent event,
       Emitter<TestPlanState> emit,
       ) async {
-    await deleteTestCase(DeleteTestCaseParams(event.id));
+    emit(const TestPlanState.loading());
+
+    final res = await deleteTestCase(DeleteTestCaseParams(event.id));
+
+    res.fold(
+          (f) => emit(TestPlanState.failure(
+        errorMessage: f.message ?? f.toString(),
+      )),
+          (_) => add(TestPlanEvent.getTestCasesForPlan(planId: event.planId)),
+    );
   }
 }

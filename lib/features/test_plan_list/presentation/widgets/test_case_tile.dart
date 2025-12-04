@@ -43,6 +43,7 @@ class TestCaseTile extends StatelessWidget {
               'projectId': projectId,
             },
           );
+
           context
               .read<TestPlanBloc>()
               .add(TestPlanEvent.getTestCasesForPlan(planId: planId));
@@ -51,7 +52,6 @@ class TestCaseTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Row(
             children: [
-              // ICON
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
@@ -64,15 +64,11 @@ class TestCaseTile extends StatelessWidget {
                   size: 26,
                 ),
               ),
-
               const SizedBox(width: 14),
-
-              // TEXT CONTENT
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // TITLE
                     Text(
                       testCase.title,
                       style: const TextStyle(
@@ -81,10 +77,7 @@ class TestCaseTile extends StatelessWidget {
                         color: Colors.white,
                       ),
                     ),
-
                     const SizedBox(height: 6),
-
-                    // STATUS + STEPS
                     Row(
                       children: [
                         _buildStatusBadge(statusColor, testCase.status),
@@ -102,8 +95,6 @@ class TestCaseTile extends StatelessWidget {
                   ],
                 ),
               ),
-
-              // MENU
               PopupMenuButton<String>(
                 color: AppColors.softViolet.withOpacity(0.9),
                 icon: const Icon(Icons.more_vert, color: Colors.white),
@@ -148,34 +139,21 @@ class TestCaseTile extends StatelessWidget {
     );
   }
 
-  // ───────────────────
-  // Dialogs
-  // ───────────────────
-
   void _openEditDialog(BuildContext context) {
     final titleCtrl = TextEditingController(text: testCase.title);
-    final expectedCtrl =
-    TextEditingController(text: testCase.expectedResult ?? "");
+    final expectedCtrl = TextEditingController(text: testCase.expectedResult ?? "");
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.softViolet.withOpacity(0.95),
-        title: const Text('Edytuj Test Case',
-            style: TextStyle(color: Colors.white)),
+        title: const Text('Edytuj Test Case', style: TextStyle(color: Colors.white)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            TextField(
-              controller: titleCtrl,
-              decoration: const InputDecoration(labelText: 'Tytuł'),
-            ),
+            TextField(controller: titleCtrl, decoration: const InputDecoration(labelText: 'Tytuł')),
             const SizedBox(height: 8),
-            TextField(
-              controller: expectedCtrl,
-              decoration:
-              const InputDecoration(labelText: 'Oczekiwany rezultat'),
-            ),
+            TextField(controller: expectedCtrl, decoration: const InputDecoration(labelText: 'Oczekiwany rezultat')),
           ],
         ),
         actions: [
@@ -200,9 +178,9 @@ class TestCaseTile extends StatelessWidget {
                 totalSteps: testCase.totalSteps,
               );
 
-              context
-                  .read<TestPlanBloc>()
-                  .add(TestPlanEvent.updateTestCase(testCase: updated));
+              context.read<TestPlanBloc>().add(
+                TestPlanEvent.updateTestCase(testCase: updated),
+              );
 
               Navigator.pop(ctx);
             },
@@ -218,8 +196,7 @@ class TestCaseTile extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.softViolet.withOpacity(0.95),
-        title: const Text('Usuń Test Case',
-            style: TextStyle(color: Colors.white)),
+        title: const Text('Usuń Test Case', style: TextStyle(color: Colors.white)),
         content: Text(
           'Czy na pewno chcesz usunąć „${testCase.title}”?',
           style: const TextStyle(color: Colors.white70),
@@ -232,9 +209,12 @@ class TestCaseTile extends StatelessWidget {
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
             onPressed: () {
-              context
-                  .read<TestPlanBloc>()
-                  .add(TestPlanEvent.deleteTestCase(id: testCase.id));
+              context.read<TestPlanBloc>().add(
+                TestPlanEvent.deleteTestCase(
+                  id: testCase.id,
+                  planId: planId,
+                ),
+              );
 
               Navigator.pop(ctx);
             },
